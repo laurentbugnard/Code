@@ -39,4 +39,4 @@ plt.figure(figsize = (15,12), dpi = 80)
 plt.suptitle(f'N = {N}, xi = {xi}, beta = {beta}', fontsize = 30)
 plot_map(s.real,'s')
 
-# %%
+# %% Just a test nr. 2
