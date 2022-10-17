@@ -56,4 +56,4 @@ def show_s_corr(sim):
 for sim in simulations:
     show_s_corr(sim)
 
-# %%
+# %% Just for test
