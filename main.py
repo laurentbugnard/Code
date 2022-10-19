@@ -9,8 +9,8 @@ from Simulation import *
 
 #%% Betascan - generate simulations
 N = 1000
-xi = 10000
-beta_list = np.linspace(0.5,2,16)
+xi = 1e6
+beta_list = np.linspace(0.1,1,10)
 
 simulations = list()
 for beta in beta_list:
@@ -21,3 +21,17 @@ for beta in beta_list:
 # %% Betascan - show
 for sim in simulations:
     sim.show_s()
+# %% Show only one simulation
+simulations[1].show_s()
+
+# %% Regression test
+y = simulations[5].get_s_corr()
+x = np.arange(1,y.size+1)
+#y_inverted = 1/y
+c, a = power_law_fit(x,y)
+y2 = power_law(x, c, a)
+#y2_inverted = power_law(x, c, a)
+plt.plot(x,y)
+plt.plot(x,y2)
+#plt.plot(x,y2_inverted)
+# %%

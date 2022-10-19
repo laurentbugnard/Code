@@ -3,7 +3,8 @@ import numpy as np
 from scipy import fft
 from get_corr_function import get_corr_function
 
-from plot_func import plot_map
+from plot_func import plot_map, show_plots
+from power_law_fit import *
 
 
 class Simulation(object):
@@ -26,9 +27,12 @@ class Simulation(object):
         self.C_t = fft.ifftshift(C_t_centered)
         self.C = fft.ifft2(self.C_t)
     
-    def generate_s(self):
+    def generate_s(self, centered = True, normalized = True):
         self.s_t = self.C_t * self.u_t
         self.s = fft.ifft2(self.s_t)
+        if(centered):
+            self.s = self.s - np.mean(self.s)
+            self.s_t = fft.fft2(self.s) #redefine the FT to be consistent (and to be able to use correlations)
     
     def generate_fields(self, seed = 123):
         self.generate_u(seed)
@@ -39,12 +43,21 @@ class Simulation(object):
         plt.figure(figsize = (20,8), dpi = 80)
         plt.suptitle(f'N = {self.N}, xi = {self.xi}, beta = {self.beta}', fontsize = 30)
         
-        plt.subplot(1,2,1)
+        plt.subplot(1,3,1)
         plot_map(self.s.real,'s')
 
-        plt.subplot(1,2,2)
+        plt.subplot(1,3,2)
+        c, a = self.regression()
         K = self.get_s_corr()
-        plt.loglog(np.arange(K.size//2), np.flip(K.real[0:K.size//2]))
+        x = np.arange(1,K.size+1)
+        y = power_law(x,c,a)
+        plt.plot(x, K)
+        plt.plot(x, y)
+
+        plt.subplot(1,3,3)
+        plt.loglog(x, K)
+        plt.loglog(x, y)
+        plt.text(1,K[1],f'slope = {a}', bbox={'facecolor': 'white', 'pad': 3})
         
         plt.show()
 
@@ -61,8 +74,19 @@ class Simulation(object):
         
         plt.show()
 
-    def get_s_corr(self):
-        return get_corr_function(self.s_t)
+    def get_s_corr(self, full_map = False):
+        return get_corr_function(self.s_t, full_map)
     
     def get_u_corr(self):
         return get_corr_function(self.u_t)
+
+    def regression(self):
+        K = self.get_s_corr()
+        x = np.arange(1,K.size+1)
+        c, a = power_law_fit(x,K)
+        return c, a
+    
+    def show_plots(self):
+        show_plots(self.u, self.C, self.s, \
+            self.u_t, self.C_t, self.s_t, \
+                self.N, self.xi, self.beta)
