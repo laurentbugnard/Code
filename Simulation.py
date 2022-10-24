@@ -8,18 +8,18 @@ from power_law_fit import *
 
 
 class Simulation(object):
-    def __init__(self, N, xi, beta):
-        self.N = N
+    def __init__(self, L, xi, beta):
+        self.L = L
         self.xi = xi
         self.beta = beta
 
     def generate_u(self, seed = 123):
         np.random.seed(seed)
-        self.u = np.random.randn(self.N,self.N)
+        self.u = np.random.randn(self.L,self.L)
         self.u_t = fft.fft2(self.u)
     
     def generate_C(self):
-        qx,qy = np.ogrid[-self.N/2:self.N/2,-self.N/2:self.N/2]
+        qx,qy = np.ogrid[-self.L/2:self.L/2,-self.L/2:self.L/2]
         normes = np.sqrt(qx**2 + qy**2)
 
         C_t_centered = 1/(normes**self.beta + self.xi**(-self.beta))
@@ -27,7 +27,7 @@ class Simulation(object):
         self.C_t = fft.ifftshift(C_t_centered)
         self.C = fft.ifft2(self.C_t)
     
-    def generate_s(self, centered = True, normalized = True):
+    def generate_s(self, centered = False, normalized = False):
         self.s_t = self.C_t * self.u_t
         self.s = fft.ifft2(self.s_t)
         if(centered):
@@ -41,7 +41,7 @@ class Simulation(object):
     
     def show_s(self):
         plt.figure(figsize = (20,8), dpi = 80)
-        plt.suptitle(f'N = {self.N}, xi = {self.xi}, beta = {self.beta}', fontsize = 30)
+        plt.suptitle(f'L = {self.L}, xi = {self.xi}, beta = {self.beta}', fontsize = 30)
         
         plt.subplot(1,3,1)
         plot_map(self.s.real,'s')
@@ -63,7 +63,7 @@ class Simulation(object):
 
     def show_u(self):
         plt.figure(figsize = (20,8), dpi = 80)
-        plt.suptitle(f'N = {self.N}', fontsize = 30)
+        plt.suptitle(f'L = {self.L}', fontsize = 30)
         
         plt.subplot(1,2,1)
         plot_map(self.u,'u')
@@ -89,4 +89,4 @@ class Simulation(object):
     def show_plots(self):
         show_plots(self.u, self.C, self.s, \
             self.u_t, self.C_t, self.s_t, \
-                self.N, self.xi, self.beta)
+                self.L, self.xi, self.beta)
