@@ -3,40 +3,39 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.fftpack as fft
 from plot_func import *
-from generate_fields import *
 from get_corr_function import *
-
-#%% Generate fields
-N = 3000
-xi = 10000
-beta = 1.2
-
-u, u_t = generate_u(N)
-C, C_t = generate_C(N, xi, beta)
-
-#s as a convolution
-s_t = C_t * u_t
-s = fft.ifft2(s_t)
-
-#get correlation function
-K_map, K = get_corr_function(s_t)
+from Simulation import *
 
 
-#%% Show results
-show_plots(u, C, s, u_t, C_t, s_t, N, xi, beta)
+#%% Betascan - generate simulations
+L = 100
+xi = 1e6
+beta_list = np.linspace(0.1,2,10)
 
-# %% Check correlations
-plt.figure()
-plot_map(K_map.real, name = "corr")
-plt.figure()
-plt.subplot(2,1,1)
-plt.plot(np.arange(K.size//2), np.flip(K.real[0:K.size//2]))
-plt.subplot(2,1,2)
-plt.loglog(np.arange(K.size//2), np.flip(K.real[0:K.size//2]))
+simulations = list()
+for beta in beta_list:
+    sim = Simulation(N, xi , beta)
+    sim.generate_fields(seed = 1)
+    simulations.append(sim)
 
-# %% Show only s
-plt.figure(figsize = (15,12), dpi = 80)
-plt.suptitle(f'N = {N}, xi = {xi}, beta = {beta}', fontsize = 30)
-plot_map(s.real,'s')
+# %% Betascan - show
+for sim in simulations:
+    sim.show_s()
+# %% Show only one simulation
+simulations[3].show_plots()
 
+<<<<<<< HEAD
 # %% Just a test nr. 2
+=======
+# %% Regression test
+y = simulations[5].get_s_corr()
+x = np.arange(1,y.size+1)
+#y_inverted = 1/y
+c, a = power_law_fit(x,y)
+y2 = power_law(x, c, a)
+#y2_inverted = power_law(x, c, a)
+plt.plot(x,y)
+plt.plot(x,y2)
+#plt.plot(x,y2_inverted)
+# %%
+>>>>>>> betascan

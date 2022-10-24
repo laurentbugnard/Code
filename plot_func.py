@@ -15,8 +15,8 @@ def plot_map(f, name, centered = False):
     
 def plot_ft(f, name, centered = True, log = False):
     
-    N = f.shape[0]
-    qx,qy = np.ogrid[-N/2:N/2,-N/2:N/2]
+    L = f.shape[0]
+    qx,qy = np.ogrid[-L/2:L/2,-L/2:L/2]
     
     xlabels = qx.ravel().copy()
     ylabels = qy.ravel().copy()
@@ -43,10 +43,10 @@ def plot_ft(f, name, centered = True, log = False):
     plt.ylabel('q_y')
 
 
-def show_plots(u,C,s,u_t,C_t,s_t, N, xi, beta):
+def show_plots(u,C,s,u_t,C_t,s_t, L, xi, beta):
     
     plt.figure(figsize = (25,12), dpi = 80)
-    plt.suptitle(f'N = {N}, xi = {xi}, beta = {beta}', fontsize = 30)
+    plt.suptitle(f'L = {L}, xi = {xi}, beta = {beta}', fontsize = 30)
     
     plt.subplot(2,3,1)
     plot_map(u,'u')
