@@ -1,9 +1,12 @@
+#ADD COMMENTS AND CORRECT
+
 import numpy as np
 from scipy import fft
 
 
 def get_corr_function(f_t, full_map = False, normalized = False):
-    K_map = fft.ifft2(np.abs(f_t)**2) / f_t.size
+    #full complex correlation map
+    K_map = fft.ifft2(np.abs(f_t)**2) / f_t.size #normalize by the number of points
     K_map_centered = fft.fftshift(K_map)
     K_line = K_map_centered[K_map_centered.shape[0]//2,:K_map_centered.shape[1]//2]
     K = np.flip(K_line)
