@@ -8,21 +8,21 @@ from Simulation import *
 
 
 #%% Betascan - generate simulations
-N = 1000
+L = 100
 xi = 1e6
-beta_list = np.linspace(0.1,1,10)
+beta_list = np.linspace(0.1,2,10)
 
 simulations = list()
 for beta in beta_list:
     sim = Simulation(N, xi , beta)
-    sim.generate_fields()
+    sim.generate_fields(seed = 1)
     simulations.append(sim)
 
 # %% Betascan - show
 for sim in simulations:
     sim.show_s()
 # %% Show only one simulation
-simulations[1].show_s()
+simulations[3].show_plots()
 
 # %% Regression test
 y = simulations[5].get_s_corr()
