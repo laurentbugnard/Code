@@ -38,7 +38,7 @@ def plot_ft(f, name, centered = True, logscale = False):
     
     #scale of the colormap
     if(logscale):
-        plt.imshow(np.abs(f), origin = 'lower', norm = LogNorm(vmax = np.max(np.abs(f))/1e3))
+        plt.imshow(np.abs(f), origin = 'lower', norm = LogNorm())#(vmax = np.max(np.abs(f))/1e3))
     else:
         plt.imshow(np.abs(f), origin = 'lower')
         
@@ -73,13 +73,13 @@ def show_plots(u,C,s,u_t,C_t,s_t, L, xi, beta):
     
     #Their FT
     plt.subplot(2,3,4)
-    plot_ft(u_t,'u_t')
+    plot_ft(u_t,'abs(u_t)')
     
     plt.subplot(2,3,5)
-    plot_ft(C_t,'C_t', logscale = True)
+    plot_ft(C_t,'abs(C_t)', logscale = True)
     
     plt.subplot(2,3,6)
-    plot_ft(s_t,'s_t', logscale = True)
+    plot_ft(s_t,'abs(s_t)', logscale = True)
 
     plt.show()
     
