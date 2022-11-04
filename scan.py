@@ -1,7 +1,7 @@
 from Simulation import *
 
 #%%
-def scan(L_list, xi_list, beta_list, s_centered = False, vary_seed = False):
+def scan(L_list, xi_list, beta_list, s_centered = True, vary_seed = False):
     
     '''Returns a LIST of simulations over the chosen parameter.'''
     

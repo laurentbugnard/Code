@@ -6,13 +6,13 @@ from scipy import fft
 
 def get_corr_function(f, full_map = False, normalized = True):
     #full complex correlation map
-    f_t = fft.fft2(f) #gett the fourier transform
-    K_map = fft.ifft2(np.abs(f_t)**2) / f.size #normalize by the number of points
-    K_map_centered = fft.fftshift(K_map) #center to easily take a line
-    K_line = K_map_centered[K_map_centered.shape[0]//2,:K_map_centered.shape[1]//2]
-    K = np.flip(K_line)
+    f_t = fft.fft2(f) #get the fourier transform
+    #normalize by the number of points: shouldn't be necessary since ifft2 already does
+    #don't know why, but it doesn't work without it:
+    K_map = fft.ifft2(np.abs(f_t)**2)/f.size 
+    K = K_map[0,:K_map.shape[1]//2]
     if(full_map):
-        return K_map_centered
+        return K_map
     else:
         if(normalized):
             return K.real / np.var(f)

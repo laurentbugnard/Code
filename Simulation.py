@@ -33,6 +33,7 @@ class Simulation(object):
         #if we asked it to be centered around 0
         if(not s_centered):
             print("Warning: <s> is not 0!") #announce that s was modified!
+        else:
             self.C_t[0,0] = 0
         self.C = fft.ifft2(self.C_t)
     
@@ -47,31 +48,52 @@ class Simulation(object):
         self.generate_s()
     
     #show the s-field and also a regression for its correlations
-    def show_s(self):
-        plt.figure(figsize = (20,8), dpi = 80)
-        plt.suptitle(f'L = {self.L}, xi = {self.xi}, beta = {self.beta}', fontsize = 30)
+    def corr(self, mean_window = 0, cut = 1, plot = True):
         
-        plt.subplot(1,3,1)
-        plot_map(self.s.real,'s')
-
-        #Plot the regression
-        plt.subplot(1,3,2)
-        c, a = self.regression()
-        K = get_corr_function(self.s) #get the correlations explicitely
+        #get correlations and fit
+        K = get_corr_function(self.s) #get the correlations
+        K_smooth = K
+        if (mean_window != 0):
+            K_smooth = np.convolve(K, np.ones(mean_window)/mean_window, mode='same') #moving mean
         x = np.arange(1,K.size+1) #shifted to avoid division by 0
-        y = power_law(x,c,a)
-        plt.plot(x, y)
-
-        #Plot the correlations
-        plt.plot(x, K)
-
-        #Again, but in loglog
-        plt.subplot(1,3,3)
-        plt.loglog(x, K)
-        plt.loglog(x, y)
-        plt.text(1,K[1],f'slope = {a}', bbox={'facecolor': 'white', 'pad': 3})
         
-        plt.show()
+        #cut off the part not wanted for the fit
+        cut_line = int(x.size*cut)
+        K_cut = K_smooth[0:cut_line]
+        x_cut = x[0:cut_line]
+
+        c, a = power_law_fit(x_cut,K_cut) #fit
+        y = power_law(x,c,a) #predicted
+
+        if(plot):
+            #prepare figure
+            plt.figure(figsize = (20,8), dpi = 80)
+            plt.suptitle(f'L = {self.L}, xi = {self.xi}, beta = {self.beta}', fontsize = 30)
+            #plot s
+            plt.subplot(1,3,1)
+            plot_map(self.s.real,'s')
+
+            #Plot the correlations and regression
+            plt.subplot(1,3,2)
+            plt.plot(x, K)
+            plt.plot(x, y, color = 'r', label = 'fit')
+
+            plt.legend()
+
+
+            #Again, but in loglog
+            plt.subplot(1,3,3)
+            plt.title(f'slope = {a:.2f}')
+            plt.loglog(x, K)
+            if(mean_window != 0):
+                plt.loglog(x, K_smooth, label = 'smooth')
+            plt.loglog(x, y, color = 'r', label = 'fit')
+            plt.axvline(x = x[cut_line], linestyle = '--', color = 'k')
+            plt.legend()
+            
+            plt.show()
+
+        return a
 
     #Plot u and its correlations (to verify it is not correlated)
     def show_u(self):
@@ -88,14 +110,6 @@ class Simulation(object):
         plt.plot(np.arange(K.size//2), np.flip(K.real[0:K.size//2]))
         
         plt.show()
-
-
-    #Do a power-law regression on the s-correlations
-    def regression(self):
-        K = get_corr_function(self.s)
-        x = np.arange(1,K.size+1)
-        c, a = power_law_fit(x,K)
-        return c, a
     
     #Calling the show_plots from the other file
     def show_plots(self):
