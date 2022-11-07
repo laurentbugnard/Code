@@ -1,7 +1,7 @@
 from Simulation import *
 
 #%%
-def scan(L_list, xi_list, beta_list, s_centered = True, vary_seed = False):
+def scan(L_list, xi_list, beta_list, s_centered = True, s_normalized = False, vary_seed = False):
     
     '''Returns a LIST of simulations over the chosen parameter.'''
     
@@ -19,7 +19,8 @@ def scan(L_list, xi_list, beta_list, s_centered = True, vary_seed = False):
         for xi in xi_list:
             for beta in beta_list:
                 sim = Simulation(L, xi , beta)
-                sim.generate_fields(s_centered = s_centered, seed = seed_list[i])
+                sim.generate_fields(s_centered = s_centered, s_normalized = s_normalized, \
+                    seed = seed_list[i])
                 simulations.append(sim)
                 i = i+1 #update iterator for seeds
                 

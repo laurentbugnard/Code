@@ -17,9 +17,11 @@ ipython.run_line_magic("load_ext", "autoreload")
 ipython.run_line_magic("autoreload", "2")
 
 #%% Generate ONE simulation to visualize stuff
-test_sim = Simulation(L = 1000, xi = float('inf'), beta = 0.5)
-test_sim.generate_fields(s_centered = True)
+test_sim = Simulation(L = 1000, xi = 1e8, beta = 0.6)
+test_sim.generate_fields(s_centered = True, s_normalized= True)
 
 #%% Show s correlations
 test_sim.corr(cut = 0.1)
+# %%
+test_sim.show_plots()
 # %%

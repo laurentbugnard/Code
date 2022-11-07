@@ -21,14 +21,11 @@ class Simulation(object):
     
     def generate_C(self, s_centered = True):
         #generate the field of q-norms
-        qx,qy = np.ogrid[-self.L/2:self.L/2,-self.L/2:self.L/2]
+        qx,qy = np.meshgrid(fft.fftfreq(self.L), fft.fftfreq(self.L))
         normes = np.sqrt(qx**2 + qy**2)
 
         #C_t how we would write it on paper
-        C_t_centered = 1/(normes**self.beta + self.xi**(-self.beta))
-
-        #C_t shifted (how the computer wants it)
-        self.C_t = fft.ifftshift(C_t_centered)
+        self.C_t = 1/(normes**self.beta + self.xi**(-self.beta))
         
         #if we asked it to be centered around 0
         if(not s_centered):
@@ -37,15 +34,19 @@ class Simulation(object):
             self.C_t[0,0] = 0
         self.C = fft.ifft2(self.C_t)
     
-    def generate_s(self):
+    def generate_s(self, s_normalized = False):
         self.s_t = self.C_t * self.u_t
         self.s = fft.ifft2(self.s_t)
+        if(s_normalized): self.s = self.s / np.std(self.s)
+    
+    def generate_sigmaY(self, p = 1):
+        self.sigmaY = np.exp(p * np.real(self.s))
     
     #convenience function to generate all the fields
-    def generate_fields(self, seed = 123, s_centered = True):
+    def generate_fields(self, seed = 123, s_centered = True, s_normalized = False):
         self.generate_u(int(seed))
         self.generate_C(s_centered)
-        self.generate_s()
+        self.generate_s(s_normalized)
     
     #show the s-field and also a regression for its correlations
     def corr(self, mean_window = 0, cut = 1, plot = True):
@@ -116,3 +117,27 @@ class Simulation(object):
         show_plots(self.u, self.C, self.s, \
             self.u_t, self.C_t, self.s_t, \
                 self.L, self.xi, self.beta)
+    
+    def show_final(self):
+        plt.figure(figsize = (20,8), dpi = 80)
+        plt.suptitle(f'L = {self.L}, xi = {self.xi}, beta = {self.beta}', fontsize = 30)
+        
+        #s
+        plt.subplot(1,3,1)
+        plot_map(self.s.real,'Re(s)')
+
+        #histogram of s values (to see its range)
+        plt.subplot(1,3,2)
+        plt.title('Histogram of s values')
+        plt.hist(np.ravel(self.s.real), bins = 50)
+
+        #sigmaY
+        plt.subplot(1,3,3)
+        plot_map(self.sigmaY, f'sigmaY, mean = {np.mean(self.sigmaY):.2f}, std = {np.std(self.sigmaY):.2f}')
+        plt.clim(np.mean(self.sigmaY)-np.std(self.sigmaY), np.mean(self.sigmaY)+np.std(self.sigmaY))
+        
+        plt.show()
+
+    def get_coordinates(self):
+        interval = np.arange(self.L) - int(self.L//2)
+        return np.meshgrid(interval, interval)
