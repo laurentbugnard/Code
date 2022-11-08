@@ -10,35 +10,41 @@ $$    \Gamma (r) = \frac{\langle s(\vec{x})s(\vec{x}-\vec{r})\rangle}{\langle s^
 The idea is to start with a Gaussian field $u(x) \sim N(0,1), \forall x$ that is completely uncorrelated, i.e. $\langle u(x) u(x-r) \rangle = \delta_{r,0}$ and to "blur" it by convoluting it with a correlator $C(x)$. Our aim is to find which form 
 $C(x)$ should take in order to obtain the desired behavior of $s(x)$. We will show that its Fourier-transform (FT) $\tilde{C}(q)$ must necessarily follow a power-law itself. Switching to Fourier space is natural since the convolution $s(x) = (C \ast u)(x)$ is translated to a simple multiplication $\tilde{s}(q) = \tilde{C}(q) \tilde{u}(q)$.
 
-To begin, we notice that the correlation function can be understood as a convolution as well. To this end, we suppose that the field $s(x)$ is large enough to assume that averaging over different realisations is equivalent to averaging over the whole system (*write a paragraph about this?*), i.e. we can write $\Gamma(r) =  \langle s(x)s(x-r)\rangle = \frac{1}{L^d} \int s(x) s(x-r) dx$, where $L$ is the length of the system and $d$ the spatial dimension. We then introduce the field $s'(x) := s(-x)$, which effectively turns $\Gamma$ into a convolution:
+To begin, we notice that the correlation function can be understood as a convolution as well. To this end, we suppose that the field $s(x)$ is large enough to assume that averaging over different realisations is equivalent to averaging over the whole system (WRITE A PARAGRAPH ABOUT THIS?), i.e. we can write $\Gamma(r) =  \langle s(x)s(x-r)\rangle = \frac{1}{L^d} \int s(x) s(x-r) dx$, where $L$ is the length of the system and $d$ the spatial dimension. We then introduce the field $s'(x) := s(-x)$, which effectively turns $\Gamma$ into a convolution:
 
 $$
     L^d\Gamma(r) = (s\ast s')(r).
 $$
-Using the convolution theorem, we can thus write 
+
+Using the convolution theorem, we can thus write
+
 $$
     \begin{aligned}
         L^d\tilde{\Gamma}(q) & = \tilde{s}(q) \tilde{s'}(q) \\ 
         & = \tilde{s}(q) \tilde{s}(-q) \\
         & = \tilde{u}(q) \tilde{u}(-q) \tilde{C}(q) \tilde{C}(-q)
-        \tag{1.1}
     \end{aligned}
-    
 $$
+
 and going back to real space and using the convolution theorem again twice:
+
 $$
-    \begin{aligned}
-        \Gamma(r) & = \frac{1}{L^d} (\langle u(x)u(x-z) \rangle \ast g(z))(r) \\
-        &= \frac{1}{L^d} g(r)
-    \end{aligned}
+\begin{aligned}
+    \Gamma(r) & = \frac{1}{L^d} (\langle u(x)u(x-z) \rangle \ast g(z))(r) \\
+    &= \frac{1}{L^d} g(r)
+\end{aligned}
 $$
+
 where we defined $g(z) = F^{-1}[\tilde{C}(q)\tilde{C}(-q)]$, $F^{-1}$ being the inverse FT, and we used the uncorrelatedness of the Gaussian field.
 
 To obtain scale invariant correlations, $g(r)$ must follow a power law, and since the FT of a power law is again a power law [1], $\tilde{C}(q)\tilde{C}(-q)$ must do as well. A possible choice is
+
 $$
     \tilde{C}(q) \sim |q|^{-\beta} \implies g(r) \sim |r|^{2\beta - d},
 $$
+
 from which we finally derive a **relation between exponents**:
+
 $$
     \alpha = d - 2\beta
 $$
@@ -67,6 +73,7 @@ $$
 std(\sigma^Y) &\approx p,
 \end{align*}
 $$ 
+
 provided we intially normalized $s$ to $std(s) = 1$. This scale-shift also has the advantage to preserve power law correlations.
 
 ### Limitations
