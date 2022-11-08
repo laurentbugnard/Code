@@ -40,6 +40,7 @@ class Simulation(object):
         if(s_normalized): self.s = self.s / np.std(self.s)
     
     def generate_sigmaY(self, p = 1):
+        self.p = p
         self.sigmaY = np.exp(p * np.real(self.s))
     
     #convenience function to generate all the fields
@@ -69,27 +70,31 @@ class Simulation(object):
         if(plot):
             #prepare figure
             plt.figure(figsize = (20,8), dpi = 80)
-            plt.suptitle(f'L = {self.L}, xi = {self.xi}, beta = {self.beta}', fontsize = 30)
+            plt.suptitle(fr'$L = {self.L}, \xi = {self.xi}, \beta = {self.beta}$', fontsize = 30)
             #plot s
             plt.subplot(1,3,1)
-            plot_map(self.s.real,'s')
+            plot_map(self.s.real,r'$Re(s)$')
 
             #Plot the correlations and regression
             plt.subplot(1,3,2)
             plt.plot(x, K)
-            plt.plot(x, y, color = 'r', label = 'fit')
+            plt.plot(x, y, color = 'r', label = 'power law fit')
+            plt.xlabel(r'$r$')
+            plt.ylabel(r'$\Gamma (r)$')
 
             plt.legend()
 
 
             #Again, but in loglog
             plt.subplot(1,3,3)
-            plt.title(f'slope = {a:.2f}')
+            plt.title(fr'$\alpha_m = {a:.2f}$', fontsize = 20)
             plt.loglog(x, K)
             if(mean_window != 0):
                 plt.loglog(x, K_smooth, label = 'smooth')
-            plt.loglog(x, y, color = 'r', label = 'fit')
+            plt.loglog(x, y, color = 'r', label = 'power law fit')
             plt.axvline(x = x[cut_line], linestyle = '--', color = 'k')
+            plt.xlabel(r'$r$')
+            plt.ylabel(r'$\Gamma (r)$')
             plt.legend()
             
             plt.show()
@@ -120,22 +125,29 @@ class Simulation(object):
     
     def show_final(self):
         plt.figure(figsize = (20,8), dpi = 80)
-        plt.suptitle(f'L = {self.L}, xi = {self.xi}, beta = {self.beta}', fontsize = 30)
+        plt.suptitle(fr'$L = {self.L}, \xi = {self.xi}, \beta = {self.beta}$', fontsize = 30)
         
         #s
-        plt.subplot(1,3,1)
-        plot_map(self.s.real,'Re(s)')
+        plt.subplot(1,2,1)
+        plot_map(self.s.real,r'$Re(s)$')
 
-        #histogram of s values (to see its range)
-        plt.subplot(1,3,2)
-        plt.title('Histogram of s values')
-        plt.hist(np.ravel(self.s.real), bins = 50)
+        # #histogram of s values (to see its range)
+        # plt.subplot(1,3,2)
+        # plt.title('Histogram of s values')
+        # plt.hist(np.ravel(self.s.real), bins = 50)
 
         #sigmaY
-        plt.subplot(1,3,3)
-        plot_map(self.sigmaY, f'sigmaY, mean = {np.mean(self.sigmaY):.2f}, std = {np.std(self.sigmaY):.2f}')
-        plt.clim(np.mean(self.sigmaY)-np.std(self.sigmaY), np.mean(self.sigmaY)+np.std(self.sigmaY))
+        sp = plt.subplot(1,2,2)
+        plot_map(self.sigmaY, fr'$\sigma^Y, p = {self.p}$')
         
+        #configure colorabar
+        middle = np.mean(self.sigmaY)
+        min = middle - np.std(self.sigmaY)
+        max = middle + np.std(self.sigmaY)
+        plt.clim(min, max)
+        cbar = plt.gca().images[-1].colorbar
+        cbar.set_ticks([min,middle,max])
+        cbar.set_ticklabels([f'(mean - std) = {min:.2f}',f'mean = {middle:.2f}',f'(mean + std) = {max:.2f}'])
         plt.show()
 
     def get_coordinates(self):

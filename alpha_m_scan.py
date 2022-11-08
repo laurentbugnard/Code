@@ -21,7 +21,7 @@ ipython.run_line_magic("autoreload", "2")
 L_list = np.linspace(100,3000, 10)
 xi = float('inf')
 beta_list = np.linspace(0.05,1,15)
-
+#%%
 sims = scan(L_list = L_list, xi_list = [xi], beta_list = beta_list, \
      vary_seed = True)
 
@@ -38,10 +38,12 @@ df = pd.read_csv('alpha_simulations')
 plt.figure()
 plt.plot(beta_list, alpha_predicted, color = 'r', label = 'predicted')
 
-for L in L_list:
-     plt.plot(df[df.L == int(L)]["beta"], df[df.L == int(L)]["alpha"], label = f'L = {L}', marker = 'o')
-plt.xlabel('beta')
-plt.ylabel('alpha')
+for L in L_list[[0,3,6,9]]:
+     plt.plot(df[df.L == int(L)]["beta"], df[df.L == int(L)]["alpha"], label = f'L = {int(L)}', marker = 'o')
+plt.xlabel(r'$\beta$')
+plt.ylabel(r'$\alpha$')
 plt.legend()
 
-#CONCLUSION: CHOOSE BETA BETWEEN 0.6 and 0.8 FOR NOW
+plt.savefig('results/alpha_m_scan.png')
+
+# %%

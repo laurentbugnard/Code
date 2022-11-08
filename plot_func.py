@@ -11,9 +11,9 @@ def plot_map(f, name, centered = False):
         plt.text(0,0,"centered", bbox={'facecolor': 'white', 'pad': 3})
     plt.imshow(f, origin = 'lower')
     plt.colorbar()
-    plt.title(name)
-    plt.xlabel('x')
-    plt.ylabel('y')
+    plt.title(name, fontsize = 20)
+    plt.xlabel(r'$x$')
+    plt.ylabel(r'$y$')
     
 def plot_ft(f, name, centered = True, logscale = False):
     ''' Plots the 2d Fourier transform of a map. 
@@ -43,43 +43,43 @@ def plot_ft(f, name, centered = True, logscale = False):
         plt.imshow(np.abs(f), origin = 'lower')
         
     plt.colorbar()
-    plt.title(name)
+    plt.title(name, fontsize = 20)
     #correct frequency axis labels
     plt.gca().set_xticks(range(len(xlabels)))
     plt.gca().set_yticks(range(len(ylabels)))
     plt.gca().set_xticklabels(xlabels)
     plt.gca().set_yticklabels(ylabels)
     plt.locator_params(nbins=10)
-    plt.xlabel('q_x')
-    plt.ylabel('q_y')
+    plt.xlabel(r'$q_x$')
+    plt.ylabel(r'$q_y$')
 
 
 #Function to show all the plots conveniently
 def show_plots(u,C,s,u_t,C_t,s_t, L, xi, beta):
     
     plt.figure(figsize = (25,12), dpi = 80)
-    plt.suptitle(f'L = {L}, xi = {xi}, beta = {beta}', fontsize = 30)
+    plt.suptitle(fr'$L = {L}, \xi = {xi}, \beta = {beta}$', fontsize = 30)
     
     #Maps
     plt.subplot(2,3,1)
-    plot_map(u,'u')
+    plot_map(u,r'$u$')
     
     plt.subplot(2,3,2)
-    plot_map(C.real,'Re(C)', centered = True)
+    plot_map(C.real,r'$Re(C)$', centered = True)
     
     plt.subplot(2,3,3)
-    plot_map(s.real,'Re(s)')
+    plot_map(s.real,r'$Re(s)$')
     
     
     #Their FT
     plt.subplot(2,3,4)
-    plot_ft(u_t,'abs(u_t)')
+    plot_ft(u_t,r'$|\tilde{u}|$')
     
     plt.subplot(2,3,5)
-    plot_ft(C_t,'abs(C_t)', logscale = True)
+    plot_ft(C_t,r'$|\tilde{C}|$', logscale = True)
     
     plt.subplot(2,3,6)
-    plot_ft(s_t,'abs(s_t)', logscale = True)
+    plot_ft(s_t,r'$|\tilde{s}|$', logscale = True)
 
     plt.show()
     
