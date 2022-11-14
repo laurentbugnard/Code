@@ -5,6 +5,7 @@ from scipy import fft
 
 
 def get_corr_function(f, full_map = False, normalized = True):
+    f = f.real #first make sure it's real, because parasite complex values can change everything
     #full complex correlation map
     f_t = fft.fft2(f) #get the fourier transform
     #normalize by the number of points: shouldn't be necessary since ifft2 already does

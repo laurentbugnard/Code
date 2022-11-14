@@ -28,8 +28,8 @@ $$
 and going back to real space and using the convolution theorem again twice:
 $$
     \begin{aligned}
-        \Gamma(r) & = \frac{1}{L^d} (\langle u(x)u(x-z) \rangle \ast g(z))(r) \\
-        &= \frac{1}{L^d} g(r)
+        \Gamma(r) & = (\langle u(x)u(x-z) \rangle \ast g(z))(r) \\
+        &= g(r)
     \end{aligned}
 $$
 where we defined $g(z) = F^{-1}[\tilde{C}(q)\tilde{C}(-q)]$, $F^{-1}$ being the inverse FT, and we used the uncorrelatedness of the Gaussian field.

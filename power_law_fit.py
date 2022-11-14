@@ -2,6 +2,12 @@ from matplotlib import pyplot as plt
 import numpy as np
 from scipy.optimize import curve_fit
 
+def reg_power_law(x, c, a):
+    '''Decreasing power law: c * x^(-a)'''
+    f = c*(1/x)**a
+    f[f == float('inf')] = 0
+    return f
+
 def power_law(x, c, a):
     '''Decreasing power law: c * x^(-a)'''
     return c*(1/x)**a

@@ -10,18 +10,30 @@ from get_values import *
 from power_law_fit import *
 from sklearn.linear_model import LinearRegression
 
-from IPython import get_ipython
-ipython = get_ipython()
-ipython.run_line_magic("matplotlib", "qt")
-ipython.run_line_magic("load_ext", "autoreload")
-ipython.run_line_magic("autoreload", "2")
+# from IPython import get_ipython
+# ipython = get_ipython()
+# ipython.run_line_magic("matplotlib", "qt")
+# ipython.run_line_magic("load_ext", "autoreload")
+# ipython.run_line_magic("autoreload", "2")
 
 #%% Generate ONE simulation to visualize stuff
-test_sim = Simulation(L = 100, xi = float('inf'), beta = 0.8)
-test_sim.generate_fields(s_centered = True, s_normalized= True)
+sim = Simulation(L = 100, xi = float('inf'))
+sim.generate_fields(method = 'alpha', exponent = 0.1)
+sim.generate_sigmaY(p = 0.01)
 
-#%% Show s correlations
-test_sim.corr(cut = 0.1)
+sim2 = Simulation(L = 100, xi = 5)
+sim2.generate_fields(method = 'alpha', exponent = 0.1)
+sim2.generate_sigmaY(p = 0.01)
+
 # %%
-test_sim.show_plots()
+sim.show_plots()
+sim2.show_plots()
+#%% Show s correlations
+
+sim.corr(cut = 0.1)
+sim2.corr(cut = 0.1)
+# %%
+sim.show_final()
+sim2.show_final()
+
 # %%
