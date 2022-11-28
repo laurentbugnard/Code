@@ -4,8 +4,8 @@ import numpy as np
 from GooseEPM import SystemAthermal
 import h5py
 from matplotlib.animation import FuncAnimation
-from ipy_config import*
 from matplotlib.colors import LogNorm
+from ipy_config import*
 ipy_config()
 
 #%% EVOLUTION FUNCTION
@@ -25,7 +25,7 @@ def evolution(system, nstep, max_relaxation_steps = 100000):
     return sigma,epsp
 
 #%% LOAD DATA
-f = h5py.File('data.hdf5','r')
+f = h5py.File('data/data.hdf5','r')
 
 propagator = np.array(f.get('propagators/propL=100')).real
 propagator = propagator.copy()

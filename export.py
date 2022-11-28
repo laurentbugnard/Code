@@ -5,12 +5,8 @@ from Simulation import *
 import pandas as pd
 import h5py
 from scan import *
-
-from IPython import get_ipython
-ipython = get_ipython()
-ipython.run_line_magic("matplotlib", "qt")
-ipython.run_line_magic("load_ext", "autoreload")
-ipython.run_line_magic("autoreload", "2")
+from ipy_config import*
+ipy_config()
 
 #%% Generate
 p = 0.1
@@ -28,7 +24,7 @@ for sim in sims:
 sims[5].show_final()
 
 # %% Export result as matrix (dataset)
-f = h5py.File('data.hdf5','w')
+f = h5py.File('data/data.hdf5','w')
 group = f.create_group('sigmaY')
 group.create_dataset('xx', data = sim.get_coordinates())
 group.create_dataset('yy', data = sim.get_coordinates())

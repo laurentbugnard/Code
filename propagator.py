@@ -4,12 +4,8 @@ import scipy.fftpack as fft
 from plot_func import *
 import pandas as pd
 import h5py
-
-from IPython import get_ipython
-ipython = get_ipython()
-ipython.run_line_magic("matplotlib", "qt")
-ipython.run_line_magic("load_ext", "autoreload")
-ipython.run_line_magic("autoreload", "2")
+from ipy_config import*
+ipy_config()
 
 #%% Me
 
@@ -29,7 +25,7 @@ def propagator(L):
 
 
 #%% Export
-f = h5py.File('data.hdf5','r+')
+f = h5py.File('data/data.hdf5','r+')
 for L in [30,50]:
     f.create_dataset(f'propagators/propL={L}', data = propagator(L))
 f.close()

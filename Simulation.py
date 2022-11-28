@@ -6,9 +6,6 @@ from get_corr_function import get_corr_function
 from plot_func import plot_map, plot_ft
 from power_law_fit import *
 
-#TODO supprimer le correlation factor
-
-
 class Simulation(object):
     def __init__(self, L, xi):
         self.L = int(L)
