@@ -25,7 +25,7 @@ def evolution(system, nstep, max_relaxation_steps = 100000):
     return sigma,epsp
 
 # %% SMALL TEST
-f = h5py.File('data.hdf5','r')
+f = h5py.File('data/data.hdf5','r')
 propagator = np.array(f.get('propagators/propL=50')).real
 propagator = propagator.copy()
 L = propagator.shape[0]
