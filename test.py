@@ -10,12 +10,8 @@ from get_values import *
 from power_law_fit import *
 from sklearn.linear_model import LinearRegression
 from FTpair import *
-
-from IPython import get_ipython
-ipython = get_ipython()
-ipython.run_line_magic("matplotlib", "qt")
-ipython.run_line_magic("load_ext", "autoreload")
-ipython.run_line_magic("autoreload", "2")
+from ipy_config import*
+ipy_config()
 
 #%%
 #generate s and invert it with respecting periodic BC

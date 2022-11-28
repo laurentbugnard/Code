@@ -5,12 +5,8 @@ from Simulation import *
 import pandas as pd
 import h5py
 from scan import *
-
-from IPython import get_ipython
-ipython = get_ipython()
-ipython.run_line_magic("matplotlib", "qt")
-ipython.run_line_magic("load_ext", "autoreload")
-ipython.run_line_magic("autoreload", "2")
+from ipy_config import*
+ipy_config()
 
 #%% Generate
 p = 0.1
