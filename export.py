@@ -24,7 +24,7 @@ for sim in sims:
 sims[5].show_final()
 
 # %% Export result as matrix (dataset)
-f = h5py.File('data.hdf5','w')
+f = h5py.File('data/data.hdf5','w')
 group = f.create_group('sigmaY')
 group.create_dataset('xx', data = sim.get_coordinates())
 group.create_dataset('yy', data = sim.get_coordinates())

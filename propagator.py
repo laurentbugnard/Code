@@ -25,7 +25,7 @@ def propagator(L):
 
 
 #%% Export
-f = h5py.File('data.hdf5','r+')
+f = h5py.File('data/data.hdf5','r+')
 for L in [30,50]:
     f.create_dataset(f'propagators/propL={L}', data = propagator(L))
 f.close()
