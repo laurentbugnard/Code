@@ -22,7 +22,7 @@ def propagator(L):
     b = 2-2*np.cos(qy)
 
     G_t = -4*a*b / (a+b)**2
-    G_t[0,0] = 0 #or -1?
+    G_t[0,0] = 0 # TODO or -1?  verify
 
     G = fft.ifft2(G_t)
     return G.real
@@ -30,7 +30,7 @@ def propagator(L):
 
 #%% Export
 f = h5py.File('data.hdf5','r+')
-for L in [100,1000]:
+for L in [30,50]:
     f.create_dataset(f'propagators/propL={L}', data = propagator(L))
 f.close()
 

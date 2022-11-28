@@ -52,35 +52,3 @@ def plot_ft(f, name, centered = True, logscale = False):
     plt.locator_params(nbins=10)
     plt.xlabel(r'$q_x$')
     plt.ylabel(r'$q_y$')
-
-
-#Function to show all the plots conveniently
-def show_plots(u,C,s,u_t,C_t,s_t, L, xi, beta):
-    
-    plt.figure(figsize = (25,12), dpi = 80)
-    plt.suptitle(fr'$L = {L}, \xi = {xi}, \beta = {beta}$', fontsize = 30)
-    
-    #Maps
-    plt.subplot(2,3,1)
-    plot_map(u,r'$u$')
-    
-    plt.subplot(2,3,2)
-    plot_map(C.real,r'$Re(C)$', centered = True)
-    
-    plt.subplot(2,3,3)
-    plot_map(s.real,r'$Re(s)$')
-    
-    
-    #Their FT
-    plt.subplot(2,3,4)
-    plot_ft(u_t,r'$|\tilde{u}|$')
-    
-    plt.subplot(2,3,5)
-    plot_ft(C_t,r'$|\tilde{C}|$', logscale = True)
-    
-    plt.subplot(2,3,6)
-    plot_ft(s_t,r'$|\tilde{s}|$', logscale = True)
-
-    plt.show()
-    
-    

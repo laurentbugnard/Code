@@ -14,6 +14,7 @@ def cfft(f, d):
         k2 = k.copy()
         k_matrix = k1 + k2.reshape(-1,1)
         return np.exp(1j* k_matrix * np.pi) * fft.fft2(f)
+    
 
 
 class FTpair(object):
