@@ -22,7 +22,7 @@ def plot_ft(f, name, centered = True, logscale = False):
     
     #prepare frequency grid
     L = f.shape[0]
-    qx,qy = np.ogrid[-L/2:L/2,-L/2:L/2]
+    qx,qy = np.fft.fftfreq(L), np.fft.fftfreq(L)
     
     #get the labels for frequency axis (centered labels)
     xlabels = qx.ravel().copy()
