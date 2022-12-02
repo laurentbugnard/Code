@@ -5,12 +5,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 from GooseEPM import SystemAthermal
 import h5py
-from matplotlib.animation import FuncAnimation
 from ipy_config import*
-from matplotlib.colors import LogNorm
 ipy_config()
 
-#%% EVOLUTION FUNCTION
 def evolution(system, nstep, max_relaxation_steps = 100000):
     sigma = np.empty([nstep])  # average stress
     epsp = np.empty([nstep])  # average plastic strain
@@ -26,7 +23,8 @@ def evolution(system, nstep, max_relaxation_steps = 100000):
         print('Warning: epsp not monotonic!')
     return sigma,epsp
 
-# %% SMALL TEST
+
+# %% Import and initialize size 100
 f = h5py.File('../data/data.hdf5','r')
 propagator = np.array(f.get('propagators/propL=100')).real
 propagator = propagator.copy()
@@ -43,60 +41,55 @@ system_small = SystemAthermal(
     seed = 123
 )
 
+####FIRST MAKE SIGMAS LESS BIG#####
+
 system_small.sigma *= 0.1
 
-#%% STEP BY STEP (evenDrivenStep)
-system_small.eventDrivenStep(max_steps = 10000) #FAILS FOR L=100
-# plt.figure(figsize = (10,8))
-# plt.subplot(1,2,1)
-# plt.imshow(system_small.sigma)
-# plt.colorbar()
-# plt.subplot(1,2,2)
-# plt.imshow(system_small.sigma > system_small.sigmay-0.1)
-#%% TOTAL EVOLUTION
-
+#%% DO 23 steps (no problem) --> then check 24ths 1by1
 sigma_small, epsp_small = evolution(system_small, 23, max_relaxation_steps=10000)
 
-#%% STEP BY STEP (even avalanches)
-# # ShiftImposedShear first
-
-# plt.figure(figsize = (10,8))
-# plt.subplot(1,2,1)
-# plt.imshow(system_small.sigma, vmin=-1, vmax=1)
-# plt.colorbar()
-
-# old_sigma = system_small.sigmabar
+#%%
 system_small.shiftImposedShear()
-# dsig = system_small.sigmabar-old_sigma
 
-# plt.subplot(1,2,2)
-# plt.title(f"Shifted by {dsig}")
-# plt.imshow(system_small.sigma, vmin=-1, vmax=1)
-# plt.colorbar()
-
-# n_failures = system_small.eventDrivenStep()
-
-# print('dsig = ',dsig, '\n n_failures = ',n_failures)
-
-#%% ANALYSE RELAXATION
-idx = system_small.makeWeakestFailureStep()
-
-index = np.unravel_index(idx, propagator.shape)
-plt.figure()
-plt.title(idx, fontsize = 20)
-plt.imshow(system_small.sigma)
-plt.colorbar()
-
-
-#%% suite
-index = [0,0]
 sigmas = []
 sigbars = []
+unstable = np.where(np.abs(np.ravel(system_small.sigma)) > np.ravel(system_small.sigmay))[0]
 
-for i in range(100):
+max_steps = 100
+i = 0
+fig = plt.figure()
+
+unstable_sizeS = []
+max_instab_list = []
+
+while(unstable.size > 0 and i < max_steps):
     system_small.makeWeakestFailureStep()
-    sigmas.append(system_small.sigma[index[0],index[1]])
-    sigbars.append(system_small.sigmabar)
+    unstable = np.where(np.abs(np.ravel(system_small.sigma)) > np.ravel(system_small.sigmay))[0]
+    
+    unstable_sizeS.append(unstable.size)
+    max_instab = np.max(np.abs(system_small.sigma) - system_small.sigmay)
+    max_instab_list.append(max_instab)
+    
+    
+    
+    if(i%10 == 0):
+        plt.subplot(3, 4 , int(np.ceil((i+1)/10)))
+        plt.imshow(np.abs(system_small.sigma) > system_small.sigmay)
+        plt.colorbar()
+        plt.title(f'sigma_bar = {system_small.sigmabar:.2f} \n instab.max = {max_instab:.2f}, n_unst. = {unstable.size}')
+        
+        
+    i+=1
+    
+plt.subplot(3,4, 11)
+plt.plot(unstable_sizeS)
+plt.title('Number of unstable particles')
+plt.subplot(3,4, 12)
+plt.title('Strongest instability')
+plt.plot(max_instab_list)
+print('n of steps: ',i)
+
+fig.tight_layout()
 
 #%% (suite)
 
@@ -104,11 +97,12 @@ for i in range(100):
 plt.figure()
 plt.subplot(1,2,1)
 plt.plot(sigmas, marker = '^')
-plt.title(f'Local stress evolution in {index}')
+plt.title('Stress of box that just broke')
 
 plt.subplot(1,2,2)
 plt.plot(sigbars)
 plt.title('Relaxation')
+
     
     
 
