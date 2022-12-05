@@ -8,23 +8,9 @@ import h5py
 from matplotlib.animation import FuncAnimation
 from ipy_config import*
 from matplotlib.colors import LogNorm
+from evolution import *
 ipy_config()
 
-#%% EVOLUTION FUNCTION
-def evolution(system, nstep, max_relaxation_steps = 100000):
-    sigma = np.empty([nstep])  # average stress
-    epsp = np.empty([nstep])  # average plastic strain
-    sigma[0] = system.sigmabar
-    epsp[0] = np.mean(system.epsp)
-
-    for i in range(1, nstep+1):
-        system.eventDrivenStep(max_steps = max_relaxation_steps)
-        sigma[i] = system.sigmabar
-        epsp[i] = np.mean(system.epsp)
-
-    if(np.sum((np.diff(epsp) < 0)) > 0):
-        print('Warning: epsp not monotonic!')
-    return sigma,epsp
 
 # %% SMALL TEST
 size = 20

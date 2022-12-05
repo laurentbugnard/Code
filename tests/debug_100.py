@@ -5,23 +5,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 from GooseEPM import SystemAthermal
 import h5py
+from evolution import *
 from ipy_config import*
 ipy_config()
-
-def evolution(system, nstep, max_relaxation_steps = 100000):
-    sigma = np.empty([nstep+1])  # average stress
-    epsp = np.empty([nstep+1])  # average plastic strain
-    sigma[0] = system.sigmabar
-    epsp[0] = np.mean(system.epsp)
-
-    for i in range(1, nstep+1):
-        system.eventDrivenStep(max_steps = max_relaxation_steps)
-        sigma[i] = system.sigmabar
-        epsp[i] = np.mean(system.epsp)
-
-    if(np.sum((np.diff(epsp) < 0)) > 0):
-        print('Warning: epsp not monotonic!')
-    return sigma,epsp
 
 
 # %% Import and initialize size 100
