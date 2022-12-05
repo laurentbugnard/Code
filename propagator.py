@@ -9,7 +9,7 @@ ipy_config()
 
 #%% Me
 
-def propagator(L, method = 'marko'):
+def propagator(L, method = 'rossi'):
     qx = fft.fftfreq(L) *2 * np.pi
     qy = qx.copy()
     qx, qy = np.meshgrid(qx,qy)

@@ -2,8 +2,8 @@ import numpy as np
 
 
 def evolution(system, nstep, max_relaxation_steps = 100000):
-    sigma = np.empty([nstep])  # average stress
-    epsp = np.empty([nstep])  # average plastic strain
+    sigma = np.empty([nstep + 1])  # average stress
+    epsp = np.empty([nstep + 1])  # average plastic strain
     sigma[0] = system.sigmabar
     epsp[0] = np.mean(system.epsp)
 

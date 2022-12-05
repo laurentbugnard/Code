@@ -11,7 +11,7 @@ ipy_config()
 
 
 # %% Import and initialize size 100
-method = 'marko'
+method = 'rossi'
 f = h5py.File('../data/data.hdf5','r')
 propagator = np.array(f.get(f'propagators/{method}_propL=100')).real
 propagator = propagator.copy()
@@ -28,17 +28,18 @@ system_small = SystemAthermal(
     seed = 123
 )
 
-#%%
-
 #%% DO 62 steps (no problem) --> then check 63ths 1by1
 #Marko: 63
 #Rossi: 399
-sigma_small, epsp_small = evolution(system_small, 100, max_relaxation_steps=10000)
-
+find_runtime_error(system_small, 500, 10000)
 #%%
+sigma_small, epsp_small = evolution(system_small, 212, max_relaxation_steps=10000)
+
 state = system_small.state
 sigma = system_small.sigma.copy()
 epsp = system_small.epsp.copy()
+
+#%% Go back to wanted system state
 
 system_small = SystemAthermal(
     propagator = propagator,
@@ -62,7 +63,7 @@ sigmas = []
 sigbars = []
 unstable = np.where(np.abs(np.ravel(system_small.sigma)) > np.ravel(system_small.sigmay))[0]
 
-max_steps = 5000 #Marko: 600, Rossi: 15000
+max_steps = 50000
 i = 0
 plot_period = max_steps/10
 fig = plt.figure()
