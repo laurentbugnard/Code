@@ -15,9 +15,13 @@ def evolution(system, nstep, max_relaxation_steps = 100000):
     epsp[0] = np.mean(system.epsp)
 
     for i in range(1, nstep+1):
-        system.eventDrivenStep(max_steps = max_relaxation_steps)
-        sigma[i] = system.sigmabar
-        epsp[i] = np.mean(system.epsp)
+        try:
+            system.eventDrivenStep(max_steps = max_relaxation_steps)
+            sigma[i] = system.sigmabar
+            epsp[i] = np.mean(system.epsp)
+        except:
+            print(f'RuntimeError at step {i}')
+            break
 
     if(np.sum((np.diff(epsp) < 0)) > 0):
         print('Warning: epsp not monotonic!')
@@ -42,32 +46,11 @@ system_small = SystemAthermal(
     seed = 123
 )
 
-#%%
-
 #%% DO 62 steps (no problem) --> then check 63ths 1by1
 #Marko: 63
 #Rossi: 399
-sigma_small, epsp_small = evolution(system_small, 100, max_relaxation_steps=10000)
+sigma_small, epsp_small = evolution(system_small, 2000, max_relaxation_steps=10000)
 
-#%%
-state = system_small.state
-sigma = system_small.sigma.copy()
-epsp = system_small.epsp.copy()
-
-system_small = SystemAthermal(
-    propagator = propagator,
-    distances_rows = np.fft.fftfreq(L)*L,
-    distances_cols = np.fft.fftfreq(L)*L,
-    sigmay_mean = np.ones_like(propagator),
-    sigmay_std = np.ones_like(propagator)*0.1,
-    seed = 123,
-    init_random_stress = False,
-    init_relax = False
-)
-
-system_small.state = state
-system_small.sigma = sigma
-system_small.epsp = epsp
 
 #%%
 system_small.shiftImposedShear()
