@@ -3,5 +3,6 @@ quick.py
 *.cpython-310.pyc
 __pycache__/
 *.py[cod]
+*.hdf5
 
 plots/
