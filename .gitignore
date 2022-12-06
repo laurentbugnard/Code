@@ -4,5 +4,6 @@ quick.py
 __pycache__/
 *.py[cod]
 *.hdf5
+data/data.hdf5
 
 plots/
