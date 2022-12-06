@@ -8,29 +8,12 @@ from matplotlib.colors import LogNorm
 from ipy_config import*
 ipy_config()
 
-#%% EVOLUTION FUNCTION
-def evolution(system, nstep, max_relaxation_steps = 100000):
-    sigma = np.empty([nstep])  # average stress
-    epsp = np.empty([nstep])  # average plastic strain
-    sigma[0] = system.sigmabar
-    epsp[0] = np.mean(system.epsp)
-
-    for i in range(1, nstep):
-        system.eventDrivenStep(max_steps = max_relaxation_steps)
-        sigma[i] = system.sigmabar
-        epsp[i] = np.mean(system.epsp)
-
-    if(np.sum((np.diff(epsp) < 0)) > 0):
-        print('Warning: epsp not monotonic!')
-    return sigma,epsp
-
 #%% LOAD DATA
 f = h5py.File('data/data.hdf5','r')
 
 propagator = np.array(f.get('propagators/propL=100')).real
 propagator = propagator.copy()
 L = propagator.shape[0]
-# TODO have a propagator that is 0 in 0
 
 sigmay_mean = np.array(f.get('sigmaY/L=1000beta=0.7xi=100000000.0p=0.1'))[0:100,0:100]
 

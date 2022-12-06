@@ -4,3 +4,4 @@ quick.py
 __pycache__/
 *.py[cod]
 
+plots/
