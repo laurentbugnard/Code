@@ -5,7 +5,7 @@ from GooseEPM import SystemAthermal
 import matplotlib.pyplot as plt
 
 #%%
-L = 100
+L = 50
 system = SystemAthermal(
     *elshelby_propagator(L=L, imposed="strain"),
     sigmay_mean=np.ones([L, L]),
@@ -16,13 +16,6 @@ system = SystemAthermal(
     sigmabar=0
 )
 
-#%% new sigma
-
-# new_sigma = np.zeros_like(system.sigma)
-# for i in range(10):
-#     new_sigma[:,3*i] = 0.7
-
-# system.sigma = new_sigma
 #%%
 nstep = 1000
 sigma = np.empty([nstep])  # average stress
