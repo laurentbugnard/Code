@@ -9,7 +9,7 @@ ipy_config()
 
 #%% Me
 
-def propagator(L):
+def propagator(L, method = 'rossi'):
     qx = fft.fftfreq(L) *2 * np.pi
     qy = qx.copy()
     qx, qy = np.meshgrid(qx,qy)
@@ -17,20 +17,34 @@ def propagator(L):
     a = 2-2*np.cos(qx)
     b = 2-2*np.cos(qy)
 
-    G_t = -4*a*b / (a+b)**2
-    G_t[0,0] = 0 # TODO or -1?  verify
+    #G_E = Eshelby
+    G_E_t = -4*a*b / (a+b)**2
+    if (method == 'marko'):
+        G_t = G_E_t
+        G_t[0,0] = 0
+    
+    if (method == 'rossi'):
+        G_t = G_E_t
+        G_t[0,0] = 0 #to avoid nan in 0
+        g = -1/(L**2 -1 ) *(np.sum(G_t) - G_t[0,0])
+        G_t /= g
+        G_t[0,0] = -1        
 
     G = fft.ifft2(G_t)
     return G.real
 
-
 #%% Export
-L_list = [100]
+L_list = [20,30,50,100,150,200,1000]
 
 f = h5py.File('data/data.hdf5','r+')
 for L in L_list:
-    del f[f'propagators/propL={L}']
-    f.create_dataset(f'propagators/propL={L}', data = propagator(L))
+    if(f'/propagators/marko_propL={L}' in f):
+        del f[f'propagators/marko_propL={L}']
+    if(f'/propagators/rossi_propL={L}' in f):
+        del f[f'propagators/rossi_propL={L}']
+    f.create_dataset(f'propagators/marko_propL={L}', data = propagator(L, method='marko'))
+    f.create_dataset(f'propagators/rossi_propL={L}', data = propagator(L, method='rossi'))
+    
 f.close()
 
 
