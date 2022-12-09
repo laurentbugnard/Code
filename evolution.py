@@ -18,7 +18,7 @@ def evolution(system, nstep: int):
         print('Warning: epsp not monotonic!')
     return sigmabar,epspbar
 
-def evolution_verbose(system, nstep: int):
+def evolution_verbose(system, nstep: int, return_dictionary = True):
     """Evolves the system by ``nstep`` and returns means and maps of ``sigma`` and ``epsp`` for each step. Additionally, returns number of relaxation steps and indexes of first failing block for each avalanche.
 
     Args:
@@ -59,7 +59,18 @@ def evolution_verbose(system, nstep: int):
         epsp.append(system.epsp.copy())
         failing[i-1] = np.argmax(np.abs(system.sigma) - system.sigmay) #TODO do it later instead (after evolution, before plotting --> when computing more things). Here, do only what is strictly necessary to extract. But then we need to extract sigmay at each step (or at least its changes).
         
-    return sigmabar, epspbar, sigma, epsp, relax_steps, failing
+    gammabar = sigmabar + epspbar
+    
+    if(return_dictionary):
+        return {'sigmabar': sigmabar,
+                'epspbar': epspbar,
+                'gammabar': gammabar,
+                'sigma': sigma,
+                'epsp': epsp,
+                'relax_steps': relax_steps,
+                'failing': failing}
+    
+    return sigmabar, epspbar, gammabar, sigma, epsp, relax_steps, failing
         
 
 def find_runtime_error(system, nstep, max_relaxation_steps = 100000):
