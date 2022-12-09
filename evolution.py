@@ -39,9 +39,9 @@ def evolution_verbose(system, nstep: int):
     epspbar = np.empty([nstep + 1])  # average plastic strain
     epspbar[0] = np.mean(system.epsp)
     
-    sigma = [system.sigma]
+    sigma = [system.sigma.copy()]
     
-    epsp = [system.epsp]
+    epsp = [system.epsp.copy()]
     
     relax_steps = np.empty([nstep + 1])
     relax_steps[0] = 0
@@ -55,8 +55,8 @@ def evolution_verbose(system, nstep: int):
         
         sigmabar[i] = system.sigmabar
         epspbar[i] = np.mean(system.epsp)
-        sigma.append(system.sigma)
-        epsp.append(system.epsp)
+        sigma.append(system.sigma.copy())
+        epsp.append(system.epsp.copy())
         failing[i-1] = np.argmax(np.abs(system.sigma) - system.sigmay) #TODO do it later instead (after evolution, before plotting --> when computing more things). Here, do only what is strictly necessary to extract. But then we need to extract sigmay at each step (or at least its changes).
         
     return sigmabar, epspbar, sigma, epsp, relax_steps, failing
