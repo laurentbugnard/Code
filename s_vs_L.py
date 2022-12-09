@@ -18,7 +18,7 @@ L_list = np.linspace(100,1000,10)
 xi = 1e6
 beta_list = np.linspace(0.05,1,100)
 
-sims = scan(L_list = L_list, xi_list = [xi], beta_list = beta_list, \
+sims = scan(L_list = L_list, xi_list = [xi], exponent_list = beta_list, \
      s_centered = True, vary_seed = True)
 
 #%% Extract values we want

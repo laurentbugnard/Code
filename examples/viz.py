@@ -53,7 +53,7 @@ def import_data(group_name):
     return sim_results
 
 #%% Import data
-sim_results = import_data('sim_results_std=0.3')
+sim_results = import_data('sim_results_alpha=0.6')
 
 #%% Static version
 show_results(**sim_results)

@@ -10,12 +10,21 @@ import h5py
 #%%
 n_steps = 1000
 L = 100
-sigmay_mean=np.ones([L, L])
+
+f = h5py.File('./data/maps.hdf5','r+')
+sigmay_mean_dict = {}
+for alpha in [0.6,0.7,0.8]:
+    sigmay_mean_dict.update({str(alpha): np.array(f.get('sigmaY/L=100alpha=0.6xi=10p=0.1'))})
+
+f.close()
+
 propagator, distances_rows, distances_cols = elshelby_propagator(L=L, imposed="strain")
+
+#%%
 
 f = h5py.File('./data/sim_results.hdf5','r+')  
 
-for std in [0, 0.1, 0.3, 0.5]:
+for alpha, sigmay_mean in sigmay_mean_dict.items():
 
     #Initialize
     system = SystemAthermal(
@@ -23,7 +32,7 @@ for std in [0, 0.1, 0.3, 0.5]:
         distances_rows=distances_rows,
         distances_cols=distances_cols,
         sigmay_mean=sigmay_mean,
-        sigmay_std= std * np.ones([L, L]),
+        sigmay_std= 0.3 * np.ones([L, L]),
         seed=0,
         init_random_stress=False,
         init_relax=True,
@@ -35,7 +44,7 @@ for std in [0, 0.1, 0.3, 0.5]:
     sim_results.update({'sigmay_mean':sigmay_mean, 'propagator':propagator})
     
     #Save results  
-    name = f'/sim_results_std={std}'
+    name = f'/sim_results_alpha={alpha}'
     if(name in f):
             del f[name]
     for k,v in sim_results.items():
