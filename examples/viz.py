@@ -12,7 +12,7 @@ ipy_config()
 from matplotlib.animation import FuncAnimation
 from matplotlib.animation import FFMpegWriter
 from matplotlib.colors import LogNorm
-from animation import *
+from show_results import *
 
 #%%
 L = 50
@@ -34,17 +34,21 @@ system = SystemAthermal(
 )
 
 #%%
-sim_results = evolution_verbose(system, 1000)
+sim_results = evolution_verbose(system, 500)
 
 
 
 #%%
 
-anim = animation(sigmay_mean, propagator, **sim_results, frames_per_second=10, rate = 3)
+anim = show_results(sigmay_mean, propagator, **sim_results, animate = True, fps=60, rate = 1)
 
-# f = "./animation.mp4" 
-# writervideo = FFMpegWriter(fps=60) 
-# anim.save(f, writer=writervideo)
+#%%
+import matplotlib as mpl 
+mpl.rcParams['animation.ffmpeg_path'] = r"C:/Users/laure/Desktop/ffmpeg-2022-12-08-git-9ca139b2aa-essentials_build/bin/ffmpeg.exe"
+#%%
+writervideo = FFMpegWriter(fps=40) 
+anim.save("./animation.mp4" , writer=writervideo)
 #TODO problem: FFMpegWriter needs to access get_size_inches of Figure but I'm using subfigures
 
 # %%
+# show_results(sigmay_mean, propagator, **sim_results)

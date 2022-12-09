@@ -4,7 +4,7 @@ plt.style.use('../config/style.mplstyle')
 from matplotlib.animation import FuncAnimation
 from matplotlib.colors import LogNorm
 
-def animation(sigmay_mean, propagator, sigmabar, epspbar, gammabar, sigma, epsp, relax_steps, failing, rate = 1, frames_per_second = 1):
+def show_results(sigmay_mean, propagator, sigmabar, epspbar, gammabar, sigma, epsp, relax_steps, failing, animate = False, rate = 1, fps = 1):
     
     plt.close('all')
     fig = plt.figure()
@@ -15,12 +15,12 @@ def animation(sigmay_mean, propagator, sigmabar, epspbar, gammabar, sigma, epsp,
     axes_images = subfigs[0,0].subplots(1,2)
     #sigma(x)
     ax = axes_images[0]
-    sigma_image = ax.imshow(sigma[0], vmin = -1.1, vmax = 1.1)
+    sigma_image = ax.imshow(sigma[-1], vmin = -1.1, vmax = 1.1)
     sigma_cbar = subfigs[0,0].colorbar(sigma_image, aspect=10)
     ax.set_title(r'$\sigma(x)$')
     #epsp(x)
     ax = axes_images[1]
-    epsp_image = ax.imshow(epsp[0], vmin = 0, vmax = np.max(epsp[-1]))
+    epsp_image = ax.imshow(epsp[-1], vmin = 0, vmax = np.max(epsp[-1]))
     epsp_cbar = subfigs[0,0].colorbar(epsp_image, aspect=10)
     ax.set_title(r'$\epsilon_p(x)$')
 
@@ -79,4 +79,7 @@ def animation(sigmay_mean, propagator, sigmabar, epspbar, gammabar, sigma, epsp,
         axes_plots[1].set_ylim(0, np.max(relax_steps[0:frame*rate + 1]) + 1)
         avalanche_size.set_data(np.arange(frame*rate + 1), relax_steps[0:frame*rate + 1])
 
-    return FuncAnimation(subfigs[0,0], animate, frames=int(np.floor(len(sigma)/rate)), interval= int(1/frames_per_second*1000))
+    if(animate):
+        return FuncAnimation(fig, animate, frames=int(np.floor(len(sigma)/rate)) -1 , interval= int(1/fps*1000))
+    
+    return fig
