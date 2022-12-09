@@ -4,7 +4,7 @@ plt.style.use('../config/style.mplstyle')
 from matplotlib.animation import FuncAnimation
 from matplotlib.colors import LogNorm
 
-def show_results(sigmay_mean, propagator, sigmabar, epspbar, gammabar, sigma, epsp, relax_steps, failing, animate = False, rate = 1, fps = 1):
+def show_results(sigmay_mean, propagator, sigmabar, epspbar, gammabar, sigma, epsp, relax_steps, failing, show_animation = False, rate = 1, fps = 1):
     
     plt.close('all')
     fig = plt.figure()
@@ -79,7 +79,7 @@ def show_results(sigmay_mean, propagator, sigmabar, epspbar, gammabar, sigma, ep
         axes_plots[1].set_ylim(0, np.max(relax_steps[0:frame*rate + 1]) + 1)
         avalanche_size.set_data(np.arange(frame*rate + 1), relax_steps[0:frame*rate + 1])
 
-    if(animate):
+    if(show_animation):
         return FuncAnimation(fig, animate, frames=int(np.floor(len(sigma)/rate)) -1 , interval= int(1/fps*1000))
     
     return fig

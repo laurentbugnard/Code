@@ -40,7 +40,7 @@ sim_results = evolution_verbose(system, 500)
 
 #%%
 
-anim = show_results(sigmay_mean, propagator, **sim_results, animate = True, fps=60, rate = 1)
+anim = show_results(sigmay_mean, propagator, **sim_results, show_animation = True, fps=60, rate = 1)
 
 #%%
 import matplotlib as mpl 
@@ -51,4 +51,4 @@ anim.save("./animation.mp4" , writer=writervideo)
 #TODO problem: FFMpegWriter needs to access get_size_inches of Figure but I'm using subfigures
 
 # %%
-# show_results(sigmay_mean, propagator, **sim_results)
+show_results(sigmay_mean, propagator, **sim_results)
