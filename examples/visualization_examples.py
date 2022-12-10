@@ -7,7 +7,7 @@ from GooseEPM import SystemAthermal
 import matplotlib.pyplot as plt
 from EPM_func import *
 plt.style.use('../config/style.mplstyle')
-from ipy_config import *
+from config.ipy_config import *
 ipy_config()
 from matplotlib.animation import FFMpegWriter
 from show_results import *

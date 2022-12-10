@@ -1,7 +1,7 @@
 #%% Imports
 from get_corr_function import *
 from get_values import *
-from ipy_config import *
+from config.ipy_config import *
 from plot_func import *
 from power_law_fit import *
 from scan import *

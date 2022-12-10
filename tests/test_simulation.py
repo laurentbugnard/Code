@@ -9,7 +9,7 @@ from scan import *
 from get_values import *
 from power_law_fit import *
 from sklearn.linear_model import LinearRegression
-from ipy_config import*
+from config.ipy_config import*
 ipy_config()
 
 #%% Generate ONE simulation to visualize stuff
