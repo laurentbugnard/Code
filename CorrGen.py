@@ -9,14 +9,16 @@ class CorrGen(object):
     def __init__(self, L, xi):
         self.L = int(L)
         self.xi = xi
-
-    def generate_u(self, seed = 123):
+    
+    def generate_fields(self, method, exponent, seed = 123, s_centered = True, s_normalized = True):
+        
+        ########GENERATE U##########
         np.random.seed(seed)
         self.u = np.random.randn(self.L,self.L) #Gaussian distribution
         self.u_t = fft.fft2(self.u)
         self.seed = seed
-    
-    def generate_C(self, method, exponent, s_centered = True):
+        
+        ########GENERATE C##########
         if(method == 'beta'):
             self.method = 'beta'
             self.beta = exponent
@@ -36,6 +38,7 @@ class CorrGen(object):
             g_t = fft.fft2(g).real
             self.C_t = np.sqrt(g_t+0j)
             #TODO tenter de mettre l'exponential cutoff directement dans le corrélateur, pour voir si ça fait une différence
+        
         #if we asked it to be centered around 0
         if(not s_centered):
             print("Warning: <s> is not 0!") #announce that s was modified!
@@ -43,21 +46,18 @@ class CorrGen(object):
             self.C_t[0,0] = 0
         
         self.C = fft.ifft2(self.C_t)
+        
+        #########GENERATE S############
     
-    def generate_s(self, s_normalized = False):
         self.s_t = self.C_t * self.u_t
         self.s = fft.ifft2(self.s_t)
         if(s_normalized): self.s = self.s / np.std(self.s)
+    
     
     def generate_sigmaY(self, p = 1):
         self.p = p
         self.sigmaY = np.exp(p * np.real(self.s))
     
-    #convenience function to generate all the fields
-    def generate_fields(self, method, exponent, seed = 123, s_centered = True, s_normalized = True):
-        self.generate_u(int(seed))
-        self.generate_C(method = method, exponent = exponent, s_centered = s_centered)
-        self.generate_s(s_normalized)
     
     #show the s-field and also a regression for its correlations
     def corr(self, mean_window = 0, cut = 1, plot = True):
