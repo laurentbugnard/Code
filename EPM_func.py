@@ -1,6 +1,5 @@
 import numpy as np
 
-
 def evolution(system, nstep: int):
 
     sigmabar = np.empty([nstep + 1])  # average stress

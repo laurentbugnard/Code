@@ -4,7 +4,7 @@ sys.path.append('../') #include parent folder in the path
 import numpy as np
 from GooseEPM import elshelby_propagator
 from GooseEPM import SystemAthermal
-from evolution import *
+from EPM_func import *
 import h5py
 
 #%%

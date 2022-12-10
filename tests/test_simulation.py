@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import scipy.fftpack as fft
 from plot_func import *
 from get_corr_function import *
-from Simulation import *
+from CorrGen import *
 from scan import *
 from get_values import *
 from power_law_fit import *
@@ -13,11 +13,11 @@ from ipy_config import*
 ipy_config()
 
 #%% Generate ONE simulation to visualize stuff
-sim = Simulation(L = 100, xi = float('inf'))
+sim = CorrGen(L = 100, xi = float('inf'))
 sim.generate_fields(method = 'alpha', exponent = 0.1)
 sim.generate_sigmaY(p = 0.01)
 
-sim2 = Simulation(L = 100, xi = 5)
+sim2 = CorrGen(L = 100, xi = 5)
 sim2.generate_fields(method = 'alpha', exponent = 0.1)
 sim2.generate_sigmaY(p = 0.01)
 

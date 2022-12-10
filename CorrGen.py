@@ -1,12 +1,11 @@
 from matplotlib import pyplot as plt
 import numpy as np
 from scipy import fft
-from get_corr_function import get_corr_function
+import pandas as pd
 
-from plot_func import plot_map, plot_ft
-from power_law_fit import *
+from plot_func import plot_map, plot_ft, power_law, power_law_fit, reg_power_law
 
-class Simulation(object):
+class CorrGen(object):
     def __init__(self, L, xi):
         self.L = int(L)
         self.xi = xi
@@ -194,3 +193,62 @@ class Simulation(object):
     def get_coordinates(self):
         interval = np.arange(self.L) - int(self.L//2)
         return np.meshgrid(interval, interval)
+    
+
+
+#################FUNCTIONS#######################
+def scan(L_list, xi_list, exponent_list, method = 'alpha', s_centered = True, s_normalized = False, vary_seed = False):
+    
+    '''Returns a LIST of simulations over the chosen parameter.'''
+    
+    # make a list of seeds with which to simulate
+    n = len(L_list) * len(xi_list) * len(exponent_list) #total number of simulations
+    if(vary_seed):
+        seed_list = np.round(np.random.uniform(0,1000, n)) #pick n random seeds
+    else:
+        seed_list = np.ones(n)
+        
+
+    i = 0 #initialize iterator for seeds
+    simulations = list() #initialize output
+    for L in L_list:
+        for xi in xi_list:
+            for exponent in exponent_list:
+                sim = CorrGen(L, xi)
+                sim.generate_fields(method = method, exponent = exponent, s_centered = s_centered, s_normalized = s_normalized, \
+                    seed = seed_list[i])
+                simulations.append(sim)
+                i = i+1 #update iterator for seeds
+                
+    return simulations
+
+def get_corr_function(f, full_map = False, normalized = True):
+    f = f.real #first make sure it's real, because parasite complex values can change everything
+    #full complex correlation map
+    f_t = fft.fft2(f) #get the fourier transform
+    #normalize by the number of points: shouldn't be necessary since ifft2 already does
+    #don't know why, but it doesn't work without it:
+    K_map = fft.ifft2(np.abs(f_t)**2)/f.size 
+    K = K_map[0,:K_map.shape[1]//2]
+    if(full_map):
+        return K_map
+    else:
+        if(normalized):
+            return K.real / np.var(f)
+        else:
+            return K.real
+        
+def get_values(simulation_list, get_alpha = False):
+    df = pd.DataFrame(index = np.arange(len(simulation_list)), \
+        columns = ["L", "xi", "beta", "std_s", "seed", "alpha"])
+    
+    for i, sim in enumerate(simulation_list):
+        df.iloc[i]["L"] = sim.L
+        df.iloc[i]["xi"] = sim.xi
+        df.iloc[i]["beta"] = sim.beta
+        df.iloc[i]["std_s"] = np.std(sim.s)
+        df.iloc[i]["seed"] = sim.seed
+        if(get_alpha): 
+            df.iloc[i]["alpha"] = sim.corr(plot = False)
+    
+    return df

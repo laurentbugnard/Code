@@ -5,7 +5,7 @@ import numpy as np
 from GooseEPM import elshelby_propagator
 from GooseEPM import SystemAthermal
 import matplotlib.pyplot as plt
-from evolution import *
+from EPM_func import *
 plt.style.use('../config/style.mplstyle')
 from ipy_config import *
 ipy_config()

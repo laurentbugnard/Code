@@ -5,15 +5,15 @@ from ipy_config import *
 from plot_func import *
 from power_law_fit import *
 from scan import *
-from Simulation import *
+from CorrGen import *
 ipy_config()
 
 #%% Generate 2 simulations
-sim1 = Simulation(L = 1000, xi = float('inf'), beta = 0.8)
+sim1 = CorrGen(L = 1000, xi = float('inf'), beta = 0.8)
 sim1.generate_fields(s_centered = True, s_normalized= True)
-sim2 = Simulation(L = 1000, xi = float('inf'), beta = 0.3)
+sim2 = CorrGen(L = 1000, xi = float('inf'), beta = 0.3)
 sim2.generate_fields(s_centered = True, s_normalized= True)
-sim3 = Simulation(L = 1000, xi = float('inf'), beta = 1.1)
+sim3 = CorrGen(L = 1000, xi = float('inf'), beta = 1.1)
 sim3.generate_fields(s_centered = True, s_normalized= True)
 
 # %%
