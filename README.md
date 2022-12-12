@@ -4,8 +4,6 @@ The behavior of complex amorphous materials under stress is a topic of great int
 
 ## Generating the yield stress field $\sigma^Y$
 
-<!-- TODO: explain two methods, analytical + numerical -->
-
 ### Power law correlations
 
 We would like to generate an inhomogeneous 2D-map $s(\vec{x}), \vec{x} \in \mathbb{R}^2$, which fulfills two requirements:
@@ -27,9 +25,10 @@ $$    \Gamma (r) := \frac{\langle s(\vec{x})s(\vec{x}-\vec{r})\rangle}{\langle s
 
 >**Note:** Here, we implicitely assumed $\langle s(\vec{x}) \rangle = 0$ everywhere, thus avoiding the subtraction in the covariance term (numerator). Also we consider a system which is invariant under translation and isotropic, s.t. $\Gamma$ is only a function of $r = |\vec{r}|$ and $\langle s^2 \rangle$ is well-defined. In the following, to simplify notation, we will assume $\langle s^2 \rangle = 1$, since this is just a constant factor and we can effectively impose it. We will also omit vector notation: for example, $x-r$ must be understood as $\vec{x} - r\vec{e}$, where $\vec{e}$ is a unit vector in any direction.
 
-<!-- TODO write paragraph with any quantity. Look at wiki: autocorrelation and when we can write it as an expectation. Wiener-Khinchin theorem -->
 To begin, we introduce the fact that the correlation function can be understood as a convolution, which will prove useful when we start working with its FT.
-To this end, we suppose that the field $s(x)$ is large enough to assume that averaging over different realisations is equivalent to averaging over the whole system, i.e. we can write $\Gamma(r) =  \langle s(x)s(x-r)\rangle = \frac{1}{L^d} \int s(x) s(x-r) dx$, where $L$ is the length of the system and $d$ the spatial dimension. This simply traduces the fact that we want to look at correlations *within* the system, rather than correlations *between* different realisations of it (*WRITE A PARAGRAPH TO JUSTIFY --> GENERAL ARGUMENT WITH ANY QUANTITY*). The above integral is known as the **autocorrelation** of the "signal" $s$ and can also be written in terms of the cross-correlation operator "$\star$":
+To this end, we suppose that the field $s(x)$ is large enough to assume that averaging over different realisations is equivalent to averaging over the whole system, i.e. we can write $\Gamma(r) =  \langle s(x)s(x-r)\rangle = \frac{1}{L^d} \int s(x) s(x-r) dx$, where $L$ is the length of the system and $d$ the spatial dimension. This simply traduces the fact that we want to look at correlations *within* the system, rather than correlations *between* different realisations of it (*WRITE A PARAGRAPH TO JUSTIFY --> GENERAL ARGUMENT WITH ANY QUANTITY*).
+<!-- write paragraph with any quantity. Look at wiki: autocorrelation and when we can write it as an expectation. Wiener-Khinchin theorem -->
+The above integral is known as the **autocorrelation** of the "signal" $s$ and can also be written in terms of the cross-correlation operator "$\star$":
 
 $$\Gamma (r) = \frac{1}{L^d}(s\star s)(r).$$
 
@@ -92,6 +91,15 @@ Using scale-invariant correlations, we are cursed with ever-growing patch sizes 
 \
 >**Note 2:**
 Furthermore, as $\tilde{C}(q)$ is singular (or at least very big) at $q=0$, we will impose $\tilde{C}(0) = 0$. This corresponds to $\tilde{s}(0) = \tilde{C}(0) \tilde{u}(0) = 0$ which sets the spatial average of $s$ to 0. Without this, it would be subject to random and extreme fluctuations in different system realisations, since $\tilde{u}(0)$ is random.
+\
+\
+<!-- >**Note 3:**
+Limitations
+The procedure described in the two previous steps has limitations on the values of $\beta$:
+1) $\alpha = 2(1-\beta)$ implies that we have to restrict ourselves to  $\beta < 1$ in order to keep $\alpha > 0$. Indeed, as can be seen further below, choosing $\beta > 1$ leads to correlations that are not distributed as a power law.
+2) Choosing $\beta \ll 1$ also leads to a breakdown, as the "correlator width" gets comparable to the pixel size, and our correlations become insignificant (the field $s$ looks just like the initial gaussian field $u$). -->
+<!-- TODO Make clear that this is only for method beta -->
+<!-- TODO add limitation of continuous vs. discrete case -->
 
 ### Yield stress field $\sigma^Y$
 
@@ -113,29 +121,16 @@ std(\sigma^Y) &\approx p,
 \end{align*}
 $$
 
-provided we initially normalized $s$ to $std(s) = 1$. This scale-shift also has the advantage to preserve power law correlations. Indeed the correlation functions of $s$ and $\sigma^Y$ differ only by a constant $\frac{p^2}{1+p^2}$:
+provided we initially normalized $s$ to $std(s) = 1$. (*WRITE NOTE ABOUT COMPLEX DISTRIBUTIONS*) This scale-shift also has the advantage to preserve power law correlations. Indeed the correlation functions of $s$ and $\sigma^Y$ differ only by a constant $\frac{p^2}{1+p^2}$:
 $$
 \begin{align*}
 \Gamma_\sigma(r) &= \frac{\langle \sigma^Y(x) \sigma^Y(x-r)] \rangle - \langle \sigma^Y(x) \rangle \langle \sigma^Y(x-r) \rangle}{\langle (\sigma^Y)^2 \rangle} \\ &=\frac{\langle [1+ps(x)] [1+ps(x-r)] \rangle - \langle [1+ps(x)] \rangle \langle [1+ps(x-r)] \rangle}{\langle[1+ps]^2\rangle} \\ &= \frac{1 + p^2 \Gamma(r) - 1}{1 + p^2} = \frac{p^2}{1+p^2}\Gamma(r).
 \end{align*}
 $$
 
-### Limitations
-<!-- TODO Make clear that this is only for method beta -->
-<!-- TODO add limitation of continuous vs. discrete case -->
-
-The procedure described in the two previous steps has limitations on the values of $\beta$:
-
-- $\alpha = 2(1-\beta)$ implies that we have to restrict ourselves to  $\beta < 1$ in order to keep $\alpha > 0$. Indeed, as can be seen further below, choosing $\beta > 1$ leads to correlations that are not distributed as a power law.
-- Choosing $\beta \ll 1$ also leads to a breakdown, as the "correlator width" gets comparable to the pixel size, and our correlations become insignificant (the field $s$ looks just like the initial gaussian field $u$).
-
-<!-- TODO: add s prefactor explanation -->
-
-### Implementation
+### Implementation (WIP, not ready yet)
 
 #### Examples
-
-<!-- TODO: verify functions (write them better), redo examples -->
 
 Below are two examples of the whole procedure,for $\beta = 0.8, \xi \to \infty$  and $L = 100$ and $1000$ respectively. In step 1, each of the 3 fields $u$, $C$ and $s$ are plotted along with their FT. In step 2, we show $s$ again along with $\sigma^Y$. It should look the same, since it just corresponds to a shift, but we also restricted the colorbar to a range of 1 std above and below the mean, to make differences more visible.
 
