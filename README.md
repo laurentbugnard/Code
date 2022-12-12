@@ -1,6 +1,6 @@
 # Power Law Correlations in Elastoplastic Models: Implications for Critical Phenomena
 
-The behavior of complex amorphous materials under stress is a topic of great interest in many fields, including mechanics, materials science, and geophysics. In particular, earthquakes often display critical phenomena, where the system exhibits power law statistics and is characterized by scale-invariance and self-organized criticality. In this study, we analyze an elastoplastic model under quasistatic loading, with a focus on the effects of inhomogeneities in the yield stress field on the emergence of power law behaviors. We consider a field with power law correlations and explore its effects on the material response.
+The behavior of complex amorphous materials under stress is a topic of great interest in many fields, including mechanics, materials science, and geophysics. In particular, earthquakes often display critical phenomena, where the system exhibits power law statistics and is characterized by scale-invariance and self-organized criticality. In this study, we analyze an elastoplastic model under quasistatic loading, with a focus on the effects of inhomogeneities in the yield stress field on the emergence of power law behaviors. We consider a field with power law correlations and explore its effects on the material response. This study can be seen as a followup to the paper "Elastoplastic description of sudden failure in athermal amorphous materials during quasistatic loading" by Popović et al. (2018).
 
 ## Generating the yield stress field $\sigma^Y$
 
@@ -189,8 +189,34 @@ To better understand the relationship between $\beta$ and $\alpha_m$, several si
 
 **Note:** As can be seen in these figures, the procedure doesn't give optimal results, we still have to figure out how to enhance it.
 
-## Evolution
+## Elastoplastic model (EPM)
 
-<!-- TODO: explain our model choice -->
+Our implementation of the EPM is basically the same as the one used in "Elastoplastic description of sudden failure in athermal amorphous materials during quasistatic loading" by Popović et al. (2018). The code was simplified and adapted by T. de Geus and L. Bugnard. In the following, we provide a brief description of the conventions used.
 
-TODO: section about propagator
+### Brief description
+
+We use an elastoplastic model which is:
+
+- defined on a **2D square** system of **linear dimension L** (in pixels),
+- under **pure shear** conditions,
+- which allows us to reduce tensorial stress and strain to **scalar** values (this is a reasonable approximation *CITE*).
+- A **strain-driven** protocol is used,
+- and the system is driven by **quasistatic loading**. This means that at each timestep, the overall stress is increased by the smallest possible value such that a single cell (the weakest) yields.
+- This induces a **plastic strain** at the location of failure,
+- and the stress release is then propagated through the system using an **Eshelby-like propagator**.
+- This can lead to **avalanches**, i.e. new instabilities in other cells. The system thus needs to **relax**,
+- which is done by sequentially choosing a **random cell among the unstable ones** and letting it yield in the same way, until all cells are stabilized.
+- The **yield stresses** are **power law correlated** like described above.
+- Furthermore, each step corresponds to an **increase in time** of ...(*COMPLETE*)
+<!-- Compléter le timestep. Bien différencier relaxation step ou spatial particle failure step -->
+
+### Some clarifications
+
+For completeness, we provide further detail about the system's initialization, the propagator and the updating of yield stresses:
+
+- **Preparation:**
+The initial stress is randomized, using ...(*DESCRIBE PROCEDURE*), which keeps its overall sum (and mean) to zero. Since it can not be ruled out that some cells are already unstable, the system is initially relaxed.
+- **Propagator:**
+We use the Eshelby elastic stress propagator $G^E(r) = \frac{cos(4\theta)}{\pi r^2}$, which is then discretized using the convention described by Rossi et al. (2022). It is adapted for a strain-driven protocol and allows to very easily evolve the system for each site $\sigma_j$ at each event-driven step using the single equation $\sigma_j \rightarrow \sigma_j + \Delta\sigma_{ext} + \sum_{i} G_{j,i} \Delta\sigma_i$, where $\Delta\sigma_{ext}$ is the applied quasistatic load, the $\Delta\sigma_i$ are the local failure stress drops and $G_{j,i}$ is the discretized propagator.
+- **Updating of yield stresses:**
+After a plastic event, we choose to sample a new yield stress for the location of failure from a normal distribution. The mean corresponds to the initial value, thus approximately preserving the initial yield map. The standard deviation is a parameter that can vary and quantifies to what extent the local resistance of the medium can vary.
