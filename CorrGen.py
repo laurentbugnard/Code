@@ -6,55 +6,126 @@ import pandas as pd
 from plot_func import plot_map, plot_ft, power_law, power_law_fit, reg_power_law
 
 class CorrGen(object):
-    def __init__(self, L, xi):
+    """Object used to generate a random but power-law-correlated yield stress field, like described in the README.
+    First, create the object using the length ``L`` and the cutoff size ``xi``. Then, generate power correlations
+    using ``generate_fields`` and the desired parameters ``method`` and ``exponent``. Finally, generate the yield stress field
+    with ``generate_sigmay`` and the parameter ``p``.
+
+    Attributes:
+         L (int): Linear dimension in pixels of the (square) system.
+         xi (float): Cutoff size for the correlation function.
+         
+         seed (int): Seed to generate the gaussian field ``u``.
+         u (np.ndarray): Uncorrelated gaussian field with mean 0 and std 1.
+         u_t (np.ndarray): Fourier transform of ``u``
+         
+         method (str): Method used to find the correlator ``C``. Either "alpha" or "beta".
+         alpha (float): Exponent of the correlation function in the ``method = "alpha"`` case.
+         beta (float): Exponent of the correlator in the ``method = "beta"`` case.
+         C (np.ndarray): The correlator.
+         C_t (np.ndarray): Fourier transform of ``C``.
+         
+         s (np.ndarray): Random but power-law-correlated field.
+         s_t (np.ndarray): Fourier transform of ``s``.
+         
+         p (float): Parameter to describe the relationship between ``s`` and ``sigmaY``.
+         sigmaY (np.ndarray): Final result, yield stress field.
+
+    """
+    L:int
+    xi:float
+    
+    seed:int
+    u:np.ndarray
+    u_t:np.ndarray
+    
+    method:str
+    alpha:float
+    beta:float
+    C:np.ndarray
+    C_t:np.ndarray
+    
+    s:np.ndarray
+    s_t:np.ndarray
+    
+    p:float
+    sigmaY:np.ndarray
+    
+    def __init__(self, L:int, xi:float):
+        """Initialize the generation object with most general parameters.
+
+        Args:
+            L (int): Linear dimension in pixels of the (square) system.
+            xi (float): Cutoff size for the correlation function.
+        """
         self.L = int(L)
         self.xi = xi
     
-    def generate_fields(self, method, exponent, seed = 123, s_centered = True, s_normalized = True):
+    def generate_fields(self, method:str, exponent:float, seed = 123, s_centered = True, s_normalized = True):
+        """Generate the final field ``s`` and the intermediary ``u`` and ``C`` fields and their Fourier transforms.
+        The ``method`` parameter to compute ``C`` can be either "alpha" or "beta", for numerical or analytical ``C`` respectively.
+
+        Args:
+            method (str): "alpha" for numerical method, "beta" for analytical method.
+            exponent (float): alpha or beta exponent, depending on the method chosen.
+            seed (int, optional): seed to generate the gaussian field ``u``. Defaults to 123.
+            s_centered (bool, optional): determines whether ``s`` should have mean = 0 (imposed through ``C_t(0)`` = 0). Defaults to True.
+            s_normalized (bool, optional): determines whether ``s`` should have std = 1. Defaults to True.
+        """
+        
         
         ########GENERATE U##########
-        np.random.seed(seed)
-        self.u = np.random.randn(self.L,self.L) #Gaussian distribution
-        self.u_t = fft.fft2(self.u)
         self.seed = seed
+        np.random.seed(seed)
+        self.u = np.random.randn(self.L,self.L) #Uncorrelated gaussian map
+        self.u_t = fft.fft2(self.u)
         
         ########GENERATE C##########
-        if(method == 'beta'):
+        if(method == 'alpha'):
+            self.method = 'alpha'
+            self.alpha = exponent
+            self.beta = None
+            
+            #generate meshgrid to compute power law (gamma)
+            x, y = np.meshgrid(fft.fftfreq(self.L)*self.L,fft.fftfreq(self.L)*self.L)
+            normes = np.sqrt(x**2 + y**2)
+            gamma = reg_power_law(normes, 1, self.alpha) * np.exp(-normes/self.xi)
+            
+            gamma_t = fft.fft2(gamma).real #.real just to avoid imaginary noise
+            self.C_t = np.sqrt(gamma_t+0j) #TODO check why imaginary: because of negative values in the root?
+            #TODO tenter de mettre l'exponential cutoff directement dans le corrélateur, pour voir si ça fait une différence
+        
+        elif(method == 'beta'):
             self.method = 'beta'
             self.beta = exponent
+            self.alpha = None
+            
             #generate the field of q-norms
             qx,qy = np.meshgrid(fft.fftfreq(self.L), fft.fftfreq(self.L))
             normes = np.sqrt(qx**2 + qy**2)
 
-            #C_t how we would write it on paper
             self.C_t = 1/(normes**self.beta + self.xi**(-self.beta))
         
-        elif(method == 'alpha'):
-            self.method = 'alpha'
-            self.alpha = exponent
-            x, y = np.meshgrid(fft.fftfreq(self.L)*self.L,fft.fftfreq(self.L)*self.L)
-            normes = np.sqrt(x**2 + y**2)
-            g = reg_power_law(normes, 1, self.alpha) * np.exp(-normes/self.xi)
-            g_t = fft.fft2(g).real
-            self.C_t = np.sqrt(g_t+0j)
-            #TODO tenter de mettre l'exponential cutoff directement dans le corrélateur, pour voir si ça fait une différence
-        
-        #if we asked it to be centered around 0
         if(not s_centered):
-            print("Warning: <s> is not 0!") #announce that s was modified!
+            print("Warning: <s> is not 0!")
         else:
             self.C_t[0,0] = 0
         
-        self.C = fft.ifft2(self.C_t)
+        self.C = fft.ifft2(self.C_t) #add C for completeness
         
         #########GENERATE S############
-    
         self.s_t = self.C_t * self.u_t
         self.s = fft.ifft2(self.s_t)
         if(s_normalized): self.s = self.s / np.std(self.s)
     
     
     def generate_sigmaY(self, p = 1):
+        """Generate the yield stress field (final result) from the power-law-correlated field ``s``,
+        using :math:``\sigma^Y = \exp(ps)``.
+
+        Args:
+            p (int, optional): The scaling in the exponential. Defaults to 1.
+        """
         self.p = p
         self.sigmaY = np.exp(p * np.real(self.s))
     
@@ -214,6 +285,7 @@ def scan(L_list, xi_list, exponent_list, method = 'alpha', s_centered = True, s_
     for L in L_list:
         for xi in xi_list:
             for exponent in exponent_list:
+                Corrg
                 sim = CorrGen(L, xi)
                 sim.generate_fields(method = method, exponent = exponent, s_centered = s_centered, s_normalized = s_normalized, \
                     seed = seed_list[i])

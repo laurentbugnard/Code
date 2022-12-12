@@ -64,6 +64,7 @@ def reg_power_law(x, c, a):
     '''Decreasing power law: c * x^(-a)'''
     f = c*(1/x)**a
     f[f == float('inf')] = 0
+    #TODO check what we should impose at 0
     return f
 
 def power_law(x, c, a):
