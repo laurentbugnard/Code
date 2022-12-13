@@ -34,13 +34,13 @@ $$\Gamma (r) = \frac{1}{L^d}(s\star s)(r).$$
 
 >**Note** As claimed above, this is in fact equivalent to a convolution. Indeed, we can define $s'(x) := s(-x)$, which yields $\Gamma(r) = \frac{1}{L^d}(s\ast s')(r).$ In the following, we will stick to the autocorrelation point of view, but everything can be done in terms of convolutions.
 
-The advantage of using this form of the correlation function is that we can simplify this operation by going to Fourier space. Remember that the convolution theorem states that the FT converts convolutions into multiplications ($f \ast g \stackrel{F}{\rightarrow} \tilde{f} \cdot \tilde{g}$). It is easy to prove an equivalent theorem for the cross-correlation, with the only difference that the left term is replaced by its complex conjugate ($f \star g \stackrel{F}{\rightarrow} \overline{\tilde{f}} \cdot \tilde{g}$). For the autocorrelation, we obtain the power spectrum: this result is called the Wiener–Khinchin theorem ($f \star f \stackrel{F}{\rightarrow} |\tilde{f}|^2$). In our case:
+The advantage of using this form of the correlation function is that we can simplify this operation by going to Fourier space. Remember that the convolution theorem states that the FT converts convolutions into multiplications ( $f \ast g \stackrel{F}{\rightarrow} \tilde{f} \cdot \tilde{g}$ ). It is easy to prove an equivalent theorem for the cross-correlation, with the only difference that the left term is replaced by its complex conjugate ( $f \star g \stackrel{F}{\rightarrow} \overline{\tilde{f}} \cdot \tilde{g}$ ). For the autocorrelation, we obtain the power spectrum: this result is called the Wiener–Khinchin theorem ( $f \star f \stackrel{F}{\rightarrow} |\tilde{f}|^2$ ). In our case:
 
 $$ \tilde{\Gamma}(q) = \frac{1}{L^d}|\tilde{s}|^2(q). $$
 
 #### Introducing randomness
 
-By now, we already have a pretty simple relationship between $\Gamma$ and $s$, with which we could already try to impose power law correlations. However, we don't want to end up with a field that is smoothly correlated, but rather want to see randomly located patches. As stated above, an idea to introduce randomness is to see split $s$ into two convoluted components, one for the randomness ($u$) and one for the correlations ($C$). In Fourier space, we have
+By now, we already have a pretty simple relationship between $\Gamma$ and $s$, with which we could already try to impose power law correlations. However, we don't want to end up with a field that is smoothly correlated, but rather want to see randomly located patches. As stated above, an idea to introduce randomness is to see split $s$ into two convoluted components, one for the randomness ( $u$ ) and one for the correlations ( $C$ ). In Fourier space, we have
 
 $$ \tilde{s}(q) = \tilde{C}(q) \tilde{u}(q). $$
 
