@@ -61,7 +61,7 @@ class CorrGen(object):
         self.L = int(L)
         self.xi = xi
     
-    def generate_fields(self, method:str, exponent:float, seed = 123, s_centered = True, s_normalized = True):
+    def generate_fields(self, method:str, exponent:float, seed = 123, s_centered = True, s_normalized = True, reg_value = 0.0):
         """Generate the final field ``s`` and the intermediary ``u`` and ``C`` fields and their Fourier transforms.
         The ``method`` parameter to compute ``C`` can be either "alpha" or "beta", for numerical or analytical ``C`` respectively.
 
@@ -69,8 +69,10 @@ class CorrGen(object):
             method (str): "alpha" for numerical method, "beta" for analytical method.
             exponent (float): alpha or beta exponent, depending on the method chosen.
             seed (int, optional): seed to generate the gaussian field ``u``. Defaults to 123.
-            s_centered (bool, optional): determines whether ``s`` should have mean = 0 (imposed through ``C_t(0)`` = 0). Defaults to True.
+            s_centered (bool, optional): determines whether ``s`` should have mean = 0 (imposed through ``mean(u)`` = 0). Defaults to True.
             s_normalized (bool, optional): determines whether ``s`` should have std = 1. Defaults to True.
+            reg_value (float, optional): the value we should use for the regularization of the power law function
+            (for the correlation function in the alpha method).
         """
         
         
@@ -78,6 +80,12 @@ class CorrGen(object):
         self.seed = seed
         np.random.seed(seed)
         self.u = np.random.randn(self.L,self.L) #Uncorrelated gaussian map
+        
+        if(not(s_centered)):
+            print('Warning: <s> =/= 0')
+        else:
+            self.u -= np.mean(self.u) #shift mean to have both u and s centered around 0
+        
         self.u_t = fft.fft2(self.u)
         
         ########GENERATE C##########
@@ -89,7 +97,7 @@ class CorrGen(object):
             #generate meshgrid to compute power law (gamma)
             x, y = np.meshgrid(fft.fftfreq(self.L)*self.L,fft.fftfreq(self.L)*self.L)
             normes = np.sqrt(x**2 + y**2)
-            gamma = regularized_power_law(normes, 1, self.alpha) * np.exp(-normes/self.xi)
+            gamma = regularized_power_law(normes, 1, self.alpha, reg_value=reg_value) * np.exp(-normes/self.xi)
             
             gamma_t = fft.fft2(gamma).real #.real just to avoid imaginary noise
             self.C_t = np.sqrt(gamma_t+0j) #TODO check why imaginary: because of negative values in the root?
@@ -105,11 +113,6 @@ class CorrGen(object):
             normes = np.sqrt(qx**2 + qy**2)
 
             self.C_t = 1/(normes**self.beta + self.xi**(-self.beta))
-        
-        if(not s_centered):
-            print("Warning: <s> is not 0!")
-        else:
-            self.C_t[0,0] = 0
         
         self.C = fft.ifft2(self.C_t) #add C for completeness
         
@@ -130,7 +133,7 @@ class CorrGen(object):
         self.sigmaY = np.exp(p * np.real(self.s))
     
     
-    def corr(self, mean_window = 0, cut = 1, plot = True) -> float:
+    def corr(self, mean_window = 0, cut = 1, plot = True, C_corr = False) -> float:
         """Shows the resulting field ``s`` using imshow and plots the correlation function, along with a
         power law fit. Returns the exponent of that fit.
 
@@ -138,24 +141,29 @@ class CorrGen(object):
             mean_window (int, optional): Window to perform the moving mean before fitting. Defaults to 0.
             cut (int, optional): Fraction of data considered in the regression. Defaults to 1.
             plot (bool, optional): Determines whether to show the plots or just compute the fitted exponent. Defaults to True.
+            C_corr (bool, optional): If True, the correlations are taken directly on ``C`` instead of ``s``. Defaults to False.
 
         Returns:
             float: Exponent of the power law fit.
         """
 
         #get the correlations
-        K = get_corr_function(self.s) 
+        if(C_corr):
+            K = get_corr_function(self.C)
+        else:
+            K = get_corr_function(self.s)
+            
+            
         #smoothen them
         K_smooth = K
         if (mean_window != 0):
             K_smooth = np.convolve(K, np.ones(mean_window)/mean_window, mode='same') #moving mean
         
-        #prepare the x-axis (shifted to avoid division by 0)
-        #TODO find better solution
-        x = np.arange(1,K.size+1)
+        #prepare the x-axis
+        x = np.arange(0,K.size)
         
         #cut off the part not wanted for the fit
-        cut_begin = 2
+        cut_begin = 2 #cut out the correlation function at 0 (no meaning)
         cut_end = int(x.size*cut)
         K_cut = K_smooth[cut_begin:cut_end]
         x_cut = x[cut_begin:cut_end]
@@ -350,7 +358,7 @@ def get_corr_function(f:np.ndarray, full_map = False, normalized = True) -> np.n
     """
     
     #first, make sure f is real, because parasite complex values can heavily impact results
-    f = f.real
+    f = f.real #TODO check if it is taking the real part that messes up correlations
     f_t = fft.fft2(f) #get the fourier transform
     
     K_map = fft.ifft2(np.abs(f_t)**2)/f.size #get correlation map (2D). See README for method used
