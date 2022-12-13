@@ -77,11 +77,13 @@ def regularized_power_law(x:np.ndarray, c:float, a:float, reg_value = 0.0) -> np
     """Power law with negative exponent: :math:`c x^{-a}`. The singularity at the origin is replaced by 0.
     This is necessary, as we are working with Fourier-Transforms, which do not accept 'inf' values in the inputs.
 
+
     Args:
         x (np.ndarray): Function input.
         c (float): Multiplicative constant.
         a (float): Exponent.
         reg_value (float): Value to impose at x = 0.
+
 
     Returns:
         np.ndarray: Regularized power law of ``x``.
@@ -89,6 +91,7 @@ def regularized_power_law(x:np.ndarray, c:float, a:float, reg_value = 0.0) -> np
     
     f = c*(1/x)**a
     f[f == float('inf')] = reg_value
+
     #TODO check what we should impose at 0
     return f
 
@@ -112,6 +115,7 @@ def power_law_fit(x:np.ndarray,y:np.ndarray) -> tuple[float,float]:
     Args:
         x (np.ndarray): x-axis.
         y (np.ndarray): y-axis.
+
 
     Returns:
         float: Multiplicative constant.
@@ -140,6 +144,7 @@ def plot_power_law_fit(x:np.ndarray, y:np.ndarray, label = "") -> float:
         float: Exponent (negative).
     """
 
+
     
     popt = power_law_fit(x, y)
     plt.scatter(x, y, label = label)
@@ -149,6 +154,7 @@ def plot_power_law_fit(x:np.ndarray, y:np.ndarray, label = "") -> float:
     plt.legend()
     
     return popt[1]
+
 
 ############COMPLEX PLOTS#################
 def cplot2(ax:plt.Axes, x:np.ndarray, f:np.ndarray, method = 'real-imag', lognorm = False):
