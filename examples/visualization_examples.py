@@ -10,7 +10,7 @@ plt.style.use('../config/style.mplstyle')
 from config.ipy_config import *
 ipy_config()
 from matplotlib.animation import FFMpegWriter
-from show_results import *
+from plot_func import *
 import h5py
 
 #%% Manually simulate
