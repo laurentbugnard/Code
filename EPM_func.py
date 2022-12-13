@@ -1,6 +1,17 @@
 import numpy as np
+from GooseEPM import SystemAthermal
 
-def evolution(system, nstep: int):
+def evolution(system:SystemAthermal, nstep: int) -> tuple(np.ndarray, np.ndarray):
+    """_summary_
+
+    Args:
+        system (SystemAthermal): The system to evolve.
+        nstep (int): The number of steps.
+
+    Returns:
+        sigmabar (np.ndarray): List of mean stress.
+        epspbar (np.ndarray): List of mean plastic strain.
+    """
 
     sigmabar = np.empty([nstep + 1])  # average stress
     epspbar = np.empty([nstep + 1])  # average plastic strain
@@ -13,24 +24,23 @@ def evolution(system, nstep: int):
         sigmabar[i] = system.sigmabar
         epspbar[i] = np.mean(system.epsp)
 
-    if(np.sum((np.diff(epspbar) < 0)) > 0):
-        print('Warning: epsp not monotonic!')
     return sigmabar,epspbar
 
-def evolution_verbose(system, nstep: int, return_dictionary = True):
-    """Evolves the system by ``nstep`` and returns means and maps of ``sigma`` and ``epsp`` for each step. Additionally, returns number of relaxation steps and indexes of first failing block for each avalanche.
+def evolution_verbose(system:SystemAthermal, nstep: int) -> dict:
+    """Evolves the system by ``nstep`` and returns means and maps of ``sigma`` and ``epsp`` for each step. 
+    Additionally, returns number of relaxation steps and indexes of first failing block for each avalanche.
 
     Args:
         system (SystemAthermal): The system to evolve.
         nstep (int): The number of steps.
 
     Returns:
-        sigmabar: List of mean stress.
-        epspbar: List of mean plastic strain.
-        sigma: List of stress maps.
-        epsp: List of plastic strain maps.
-        relax_steps: Number of relaxation steps for each avalanche.
-        failing: List of failing indexes.
+        sigmabar (np.ndarray): List of mean stress.
+        epspbar (np.ndarray): List of mean plastic strain.
+        sigma (list): List of stress maps.
+        epsp (list): List of plastic strain maps.
+        relax_steps (np.ndarray): Number of relaxation steps for each avalanche.
+        failing (np.ndarray): List of failing indexes.
     """
     sigmabar = np.empty([nstep + 1])  # average stress
     sigmabar[0] = system.sigmabar
@@ -60,19 +70,27 @@ def evolution_verbose(system, nstep: int, return_dictionary = True):
         
     gammabar = sigmabar + epspbar
     
-    if(return_dictionary):
-        return {'sigmabar': sigmabar,
-                'epspbar': epspbar,
-                'gammabar': gammabar,
-                'sigma': sigma,
-                'epsp': epsp,
-                'relax_steps': relax_steps,
-                'failing': failing}
-    
-    return sigmabar, epspbar, gammabar, sigma, epsp, relax_steps, failing
+    return {'sigmabar': sigmabar,
+            'epspbar': epspbar,
+            'gammabar': gammabar,
+            'sigma': sigma,
+            'epsp': epsp,
+            'relax_steps': relax_steps,
+            'failing': failing}
         
 
-def find_runtime_error(system, nstep, max_relaxation_steps = 100000):
+def find_runtime_error(system:SystemAthermal, nstep:int, max_relaxation_steps = 100000) -> int:
+    """Finds at which macrostep a runtime error occurs due to failure to relax with microsteps.
+    Returns 0 if no error is found.
+
+    Args:
+        system (SystemAthermal): The system to evolve.
+        nstep (int): The number of steps.
+        max_relaxation_steps (int, optional): Maximum allowed relaxations steps. Defaults to 100000.
+
+    Returns:
+        int: Iteration at which the error occurs. If 0, no error occured.
+    """
 
     for i in range(1, nstep+1):
         try:
@@ -81,3 +99,4 @@ def find_runtime_error(system, nstep, max_relaxation_steps = 100000):
             print(f'RuntimeError at step {i}')
             return i
     print('No error found')
+    return 0
