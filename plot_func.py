@@ -8,8 +8,15 @@ from matplotlib.animation import FuncAnimation
 
 #############IMSHOW CONFIGURATION#################
 
-def plot_map(f, name, centered = False):
-    '''Plots a map in real space, possibly centered'''
+def plot_map(f:np.ndarray, name:str, centered = False):
+    """Plots a map in real space, possibly centered.
+
+    Args:
+        f (np.ndarray): Field that should be mapped.
+        name (str): Title that should appear.
+        centered (bool, optional): Determines whether the origin (0,0) should be set at the center of the image.
+        Defaults to False.
+    """
     
     if(centered):
         f = fft.fftshift(f)
@@ -20,11 +27,16 @@ def plot_map(f, name, centered = False):
     plt.xlabel(r'$x$')
     plt.ylabel(r'$y$')
     
-def plot_ft(f, name, centered = True, logscale = False):
-    ''' Plots the 2d Fourier transform of a map. 
-    The grid of frequencies is from -L/2 to L/2 in steps of 1.
-    Possible to center the transform and set the colormap to logscale'''
+def plot_ft(f:np.ndarray, name:str, centered = True, logscale = False):
+    """Plots a map (``f``) that is a 2D Fourier transform (of another map), possibly centered and using a logscale colormap.
     
+    Args:
+        f (np.ndarray): Field that should be mapped.
+        name (str): Title that should appear.
+        centered (bool, optional): Determines whether the origin (0,0) should be set at the center of the image. 
+        Defaults to True.
+        logscale (bool, optional): Determines whether a logscale colormap should be used. Defaults to False.
+    """
     #prepare frequency grid
     L = f.shape[0]
     qx,qy = np.fft.fftfreq(L), np.fft.fftfreq(L)
@@ -43,7 +55,7 @@ def plot_ft(f, name, centered = True, logscale = False):
     
     #scale of the colormap
     if(logscale):
-        plt.imshow(np.abs(f), origin = 'lower', norm = LogNorm())#(vmax = np.max(np.abs(f))/1e3))
+        plt.imshow(np.abs(f), origin = 'lower', norm = LogNorm())
     else:
         plt.imshow(np.abs(f), origin = 'lower')
         
@@ -60,24 +72,64 @@ def plot_ft(f, name, centered = True, logscale = False):
     
 ############POWER LAW FITS#################
     
-def reg_power_law(x, c, a):
-    '''Decreasing power law: c * x^(-a)'''
+def regularized_power_law(x:np.ndarray, c:float, a:float) -> np.ndarray:
+    """Power law with negative exponent: :math:`c x^{-a}`. The singularity at the origin is replaced by 0.
+
+    Args:
+        x (np.ndarray): Function input.
+        c (float): Multiplicative constant.
+        a (float): Exponent.
+
+    Returns:
+        np.ndarray: Regularized power law of ``x``.
+    """
+    
     f = c*(1/x)**a
     f[f == float('inf')] = 0
     #TODO check what we should impose at 0
     return f
 
-def power_law(x, c, a):
-    '''Decreasing power law: c * x^(-a)'''
+def power_law(x:np.ndarray, c:float, a:float) -> np.ndarray:
+    """Power law with negative exponent: :math:`c x^{-a}`.
+
+    Args:
+        x (np.ndarray): Function input.
+        c (float): Multiplicative constant.
+        a (float): Exponent.
+
+    Returns:
+        np.ndarray: Power law of ``x``.
+    """
     return c*(1/x)**a
 
-def power_law_fit(x,y):
-    '''Function to fit a power law and return c(prefactor) and a(decrease exponent)'''
+def power_law_fit(x:np.ndarray, y:np.ndarray) -> tuple(float,float):
+    """Fits a power law (negative exponent) to ``x`` and ``y`` using ``scipy.optimize.curve_fit``. 
+    Returns the optimal parameters ``c`` and ``a``.
 
-    popt, pcov = curve_fit(power_law,x,y)
+    Args:
+        x (np.ndarray): x-axis.
+        y (np.ndarray): y-axis.
+
+    Returns:
+        float: Multiplicative constant.
+        float: Exponent (negative).
+    """
+    
+    popt, _ = curve_fit(power_law,x,y)
     return popt
 
-def plot_power_law_fit(x,y, label = ""):
+def plot_power_law_fit(x:np.ndarray, y:np.ndarray, label = "") -> float:
+    """Generates a power law fit using ``power_law_fit`` and plots the result.
+
+    Args:
+        x (np.ndarray): x-axis.
+        y (np.ndarray): y-axis.
+        label (str, optional): Label for the plot. Defaults to "".
+
+    Returns:
+        float: Exponent (negative).
+    """
+
     
     popt = power_law_fit(x, y)
     plt.scatter(x, y, label = label)
@@ -85,11 +137,23 @@ def plot_power_law_fit(x,y, label = ""):
     plt.gca().set_xscale('log')
     plt.gca().set_yscale('log')
     plt.legend()
-
+    
+    #TODO check if popt[0] is really the exponent
     return popt[0]
 
 ############COMPLEX PLOTS#################
-def cplot2(ax, x, f, method = 'real-imag', lognorm = False):
+def cplot2(ax:plt.Axes, x:np.ndarray, f:np.ndarray, method = 'real-imag', lognorm = False):
+    """Visualization function for a complex function ``f`` of ``x``. Always plots two curves:
+    either the real and imaginary part (if ``method`` is 'real-imag') or the norm and the angle (if ``method`` is 'norm-arg').
+
+    Args:
+        ax (plt.Axes): Axes object on which we should plot.
+        x (np.ndarray): x-axis.
+        f (np.ndarray): complex function.
+        method (str, optional): Either 'real-imag' or 'norm-arg'. Defaults to 'real-imag'.
+        lognorm (bool, optional): Determines if the plots should be log-log. Defaults to False.
+    """
+    
     if((method == 'real-imag') & (lognorm == False)):
         ax.plot(x, f.real, color = 'blue', label = 'Re')
         ax.plot(x, f.imag, color = 'red', label = 'Im')
@@ -122,7 +186,36 @@ def cplot2(ax, x, f, method = 'real-imag', lognorm = False):
 ################ANIMATION#######################
 
 
-def show_results(sigmay_mean, propagator, sigmabar, epspbar, gammabar, sigma, epsp, relax_steps, failing, show_animation = False, rate = 1, fps = 1):
+def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray, 
+                 sigmabar:np.ndarray, epspbar:np.ndarray, gammabar:np.ndarray, 
+                 sigma:list[float], epsp:list[float], 
+                 relax_steps:np.ndarray, failing:np.ndarray, 
+                 show_animation = False, rate = 1, fps = 1):
+    """Visualization function which shows the whole evolution of the EPM. 
+    Top-left pannel: Evolution of stress and plastic strain fields.
+    Bottom-left pannel: Evolution of stress-strain curve and avalanche sizes.
+    Top-right pannel: Parameters of the EPM.
+    Bottom-right pannel: Avalanche analyzer (WIP).
+
+    Args:
+        sigmay_mean (np.ndarray): Unpacked from ``evolution_verbose``.
+        propagator (np.ndarray): Unpacked from ``evolution_verbose``.
+        sigmabar (np.ndarray): Unpacked from ``evolution_verbose``.
+        epspbar (np.ndarray): Unpacked from ``evolution_verbose``.
+        gammabar (np.ndarray):Unpacked from ``evolution_verbose``.
+        sigma (list[float]): Unpacked from ``evolution_verbose``.
+        epsp (list[float]): Unpacked from ``evolution_verbose``.
+        relax_steps (np.ndarUnpacked from ``evolution_verbose``.
+        failing (np.ndarray): Unpacked from ``evolution_verbose``.
+        show_animation (bool, optional): Determines whether an animation or just the final result should be returned. 
+        Defaults to False.
+        rate (int, optional): Number of data points per frame for the animation. Defaults to 1.
+        fps (int, optional): Frames per second for the animation. Defaults to 1.
+
+    Returns:
+        Either just a figure of the final results or an animation object (matplotlib.animation.FuncAnimation),
+        depending on ``show_animation``.
+    """
     
     plt.close('all')
     fig = plt.figure()
