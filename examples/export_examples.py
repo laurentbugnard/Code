@@ -14,7 +14,7 @@ L = 100
 f = h5py.File('./data/maps.hdf5','r+')
 sigmay_mean_dict = {}
 for alpha in [0.6,0.7,0.8]:
-    sigmay_mean_dict.update({str(alpha): np.array(f.get('sigmaY/L=100alpha=0.6xi=10p=0.1'))})
+    sigmay_mean_dict.update({str(alpha): np.array(f.get(f'sigmaY/L=100alpha={alpha}xi=10p=0.1'))})
 
 f.close()
 
