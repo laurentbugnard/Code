@@ -39,13 +39,11 @@ if create_maps:
 #%%
 #Initialize a system
 if initialize:
-    #generate propagator 
-    propagator_and_dist = *elshelby_propagator(L),
     #choose sigmay_mean
     sigmay_mean = sigmay_dict['0.01']
     
     system = SystemAthermal(
-        *propagator_and_dist,
+        *elshelby_propagator(L),
         sigmay_mean=sigmay_mean,
         sigmay_std= 0.0*np.ones_like(sigmay_mean),
         seed=0,
@@ -67,7 +65,6 @@ if simulate:
 
     #Evolve
     results = evolution_verbose(evolving_system, n_steps)
-    results.update({'sigmay_mean':sigmay_mean, 'propagator':propagator_and_dist[0]})
 
 #%%
 show_results(**results)

@@ -28,13 +28,15 @@ def evolution(system:SystemAthermal, nstep: int) -> tuple[np.ndarray, np.ndarray
 
 def evolution_verbose(system:SystemAthermal, nstep: int) -> dict:
     """Evolves the system by ``nstep`` and returns means and maps of ``sigma`` and ``epsp`` for each step. 
-    Additionally, returns number of relaxation steps and indexes of first failing block for each avalanche.
+    Additionally, returns propagator, mean yield stress field, number of relaxation steps and indexes of first failing block for each avalanche.
 
     Args:
         system (SystemAthermal): The system to evolve.
         nstep (int): The number of steps.
 
     Returns:
+        propagator (np.ndarray): Propagator.
+        sigmay_mean (np.ndarray): Mean yield stress field.
         sigmabar (np.ndarray): List of mean stress.
         epspbar (np.ndarray): List of mean plastic strain.
         sigma (list): List of stress maps.
@@ -70,7 +72,9 @@ def evolution_verbose(system:SystemAthermal, nstep: int) -> dict:
         
     gammabar = sigmabar + epspbar
     
-    return {'sigmabar': sigmabar,
+    return {'propagator': system.propagator,
+            'sigmay_mean': system.sigmay_mean,
+            'sigmabar': sigmabar,
             'epspbar': epspbar,
             'gammabar': gammabar,
             'sigma': sigma,
