@@ -1,7 +1,7 @@
 import numpy as np
 from GooseEPM import SystemAthermal
 
-def evolution(system:SystemAthermal, nstep: int) -> tuple(np.ndarray, np.ndarray):
+def evolution(system:SystemAthermal, nstep: int) -> tuple[np.ndarray, np.ndarray]:
     """_summary_
 
     Args:
