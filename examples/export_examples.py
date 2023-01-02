@@ -8,7 +8,7 @@ from EPM_func import *
 import h5py
 
 #%%
-n_steps = 1000
+nsteps = 1000
 L = 100
 
 f = h5py.File('../data/maps.hdf5','r+')
@@ -36,7 +36,7 @@ for alpha, sigmay_mean in sigmay_mean_dict.items():
     )
     
     #Evolution
-    sim_results = evolution_verbose(system, n_steps)    
+    sim_results = evolution_verbose(system, nsteps)    
     #Save results  
     name = f'/sim_results_alpha={alpha}'
     if(name in f):

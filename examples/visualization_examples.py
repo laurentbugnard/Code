@@ -6,54 +6,25 @@ from GooseEPM import elshelby_propagator
 from GooseEPM import SystemAthermal
 import matplotlib.pyplot as plt
 from EPM_func import *
-plt.style.use('../config/style.mplstyle')
+plt.style.use('./config/style.mplstyle')
 from config.ipy_config import *
 ipy_config()
 from matplotlib.animation import FFMpegWriter
 from plot_func import *
-import h5py
+from full_func import full_simulation
 
-#%% Manually simulate
-# L = 100
-# #TODO ask to have direct access to sigmay_mean, propagator, etc.
+#%% PARAMETERS TO SIMULATE OR IMPORT
+params = {
+    'L': 20,
+    'xi': float('inf'),
+    'method': 'alpha',
+    'exponent': 0.8,
+    'p': 0.1,
+    'stabCoef': 2
+}
+nsteps=20
 
-# sigmay_mean=np.ones([L, L])
-# propagator, distances_rows, distances_cols = elshelby_propagator(L=L, imposed="strain")
-
-# system = SystemAthermal(
-#     propagator=propagator,
-#     distances_rows=distances_rows,
-#     distances_cols=distances_cols,
-#     sigmay_mean=sigmay_mean,
-#     sigmay_std=0.00 * np.ones([L, L]),
-#     seed=0,
-#     init_random_stress=False,
-#     init_relax=True,
-#     sigmabar=0
-# )
-
-# #%%
-# sim_results = evolution_verbose(system, 1000)
-# sim_results.update({'sigmay_mean':sigmay_mean, 'propagator':propagator})
-
-#%% Import data function
-def import_data(group_name):
-    f = h5py.File('../data/sim_results.hdf5','r')
-
-    #get data as a hdf5 group
-    data = f.get(group_name)
-
-    #turn it back into a dictionary
-    sim_results = {}
-    for key in data.keys():
-        sim_results.update({key: np.array(data[key])})
-    
-    f.close()
-    
-    return sim_results
-
-#%% Import data
-sim_results = import_data('sim_results_alpha=0.8')
+sim_results = full_simulation(params, nsteps, seed=1)
 
 #%% Static version
 show_results(**sim_results)

@@ -53,7 +53,7 @@ if initialize:
     initialize = False
 
 #%%
-n_steps = 1200
+nsteps = 1200
 
 if simulate:
 
@@ -64,7 +64,7 @@ if simulate:
     evolving_system.sigma *= 2
 
     #Evolve
-    results = evolution_verbose(evolving_system, n_steps)
+    results = evolution_verbose(evolving_system, nsteps)
 
 #%%
 show_results(**results)
