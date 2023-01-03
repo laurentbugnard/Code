@@ -1,11 +1,14 @@
+#%%
 from data_func import *
 import numpy as np
 from GooseEPM import elshelby_propagator
 from GooseEPM import SystemAthermal
 from EPM_func import *
 import h5py
-from CorrGen import *
+from CorrGen import CorrGen
 from datetime import datetime
+
+#%%
 
 def full_simulation(params, nsteps, seed=0, save=True):
     
@@ -85,3 +88,5 @@ def full_simulation(params, nsteps, seed=0, save=True):
             f.create_dataset(name + '/totalSteps', data = nsteps)
             
         return res_dict
+    
+#%%
