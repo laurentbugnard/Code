@@ -1,8 +1,12 @@
 # Power Law Correlations in Elastoplastic Models: Implications for Critical Phenomena
 
+## Introduction
+
 The behavior of complex amorphous materials under stress is a topic of great interest in many fields, including mechanics, materials science, and geophysics. In particular, earthquakes often display critical phenomena, where the system exhibits power law statistics and is characterized by scale-invariance and self-organized criticality. In this study, we analyze an elastoplastic model under quasistatic loading, with a focus on the effects of inhomogeneities in the yield stress field on the emergence of power law behaviors. We consider a field with power law correlations and explore its effects on the material response. This study can be seen as a followup to the paper "Elastoplastic description of sudden failure in athermal amorphous materials during quasistatic loading" by Popović et al. (2018).
 
 ## Generating the yield stress field $\sigma^Y$
+
+<!-- TODO: make difference between spatial average and realisations average -->
 
 ### Power law correlations
 
@@ -11,11 +15,11 @@ We would like to generate an inhomogeneous 2D-map $s(\vec{x}), \vec{x} \in \math
 - The correlations between two sites at a distance $r$ should follow a power law (scale invariant patch sizes).
 - It should exhibit some randomness (random patch locations).
 
-The intuitive idea, which will be formalized below, is to start with a random (e.g. Gaussian) field $u(x) \sim N(0,1), \forall x$ that is completely uncorrelated, i.e. $\langle u(x) u(x-r) \rangle = \delta_{r,0}$ and to "blur" it by convoluting it with a correlator $C(x)$. Hence, our $s$ will be decomposed as
+The intuitive idea, which will be formalized below, is to start with a random (e.g. Gaussian) field $u(\vec{x}) \sim N(0,1), \forall \vec{x}$ that is completely uncorrelated, i.e. $\langle u(\vec{x}) u(\vec{x}-\vec{r}) \rangle = \delta_{r,0}$ and to "blur" it by convoluting it with a correlator $C(\vec{x})$. Hence, our $s$ will be decomposed as
 
-$$ s(\vec{x}) = (C \ast u)(x) $$
+$$ s(\vec{x}) = (C \ast u)(\vec{x}) $$
 
-Our aim is to find which form $C(x)$ should take in order to obtain the desired behavior of $s(x)$. To this end, we will first have to formalize what we mean by power law correlations. Then, the use of the Fourier Transform (FT) will naturally arise because of its close relation to the concepts of convolution and autocorrelation. Once we are in Fourier space, operations will simplify greatly and we will finally be able to find an expression for the FT of the correlator $\tilde{C}$, or at least be able to impose the desired correlations numerically.
+Our aim is to find which form $C(\vec{x})$ should take in order to obtain the desired behavior of $s(\vec{x})$. To this end, we will first have to formalize what we mean by power law correlations. Then, the use of the Fourier Transform (FT) will naturally arise because of its close relation to the concepts of convolution and autocorrelation. Once we are in Fourier space, operations will simplify greatly and we will finally be able to find an expression for the FT of the correlator $\tilde{C}$, or at least be able to impose the desired correlations numerically.
 
 #### Correlation function
 
@@ -23,11 +27,11 @@ We start by defining the correlation function $\Gamma (r)$ between two sites sep
 
 $$    \Gamma (r) := \frac{\langle s(\vec{x})s(\vec{x}-\vec{r})\rangle}{\langle s^2 \rangle} \sim |\vec{r}|^{-\alpha}, \alpha > 0. $$
 
->**Note:** Here, we implicitely assumed $\langle s(\vec{x}) \rangle = 0$ everywhere, thus avoiding the subtraction in the covariance term (numerator). Also we consider a system which is invariant under translation and isotropic, s.t. $\Gamma$ is only a function of $r = |\vec{r}|$ and $\langle s^2 \rangle$ is well-defined. In the following, to simplify notation, we will assume $\langle s^2 \rangle = 1$, since this is just a constant factor and we can effectively impose it. We will also omit vector notation: for example, $x-r$ must be understood as $\vec{x} - r\vec{e}$, where $\vec{e}$ is a unit vector in any direction.
+>**Note:** Here, we implicitely assumed $\langle s(\vec{x}) \rangle = 0$ everywhere, thus avoiding the subtraction in the covariance term (numerator). Also we consider a system which is invariant under translation and isotropic, s.t. $\Gamma$ is only a function of $r = |\vec{r}|$ and $\langle s^2 \rangle$ is well-defined. In the following, to simplify notation, we will assume $\langle s^2 \rangle = 1$, since by construction it will correspond to a constant factor which we can set to any desired value. We will also omit vector notation: for example, $x-r$ must be understood as $\vec{x} - r\vec{e}$, where $\vec{e}$ is a unit vector in any direction.
 
 To begin, we introduce the fact that the correlation function can be understood as a convolution, which will prove useful when we start working with its FT.
-To this end, we suppose that the field $s(x)$ is large enough to assume that averaging over different realisations is equivalent to averaging over the whole system, i.e. we can write $\Gamma(r) =  \langle s(x)s(x-r)\rangle = \frac{1}{L^d} \int s(x) s(x-r) dx$, where $L$ is the length of the system and $d$ the spatial dimension. This simply traduces the fact that we want to look at correlations *within* the system, rather than correlations *between* different realisations of it (*WRITE A PARAGRAPH TO JUSTIFY --> GENERAL ARGUMENT WITH ANY QUANTITY*).
-<!-- write paragraph with any quantity. Look at wiki: autocorrelation and when we can write it as an expectation. Wiener-Khinchin theorem -->
+To this end, we suppose that the field $s(x)$ is large enough to assume that averaging over different realisations is equivalent to averaging over the whole system, i.e. we can write $\Gamma(r) =  \langle s(x)s(x-r)\rangle = \frac{1}{L^d} \int s(x) s(x-r) dx$, where $L$ is the length of the system and $d$ the spatial dimension. This simply traduces the fact that we want to look at correlations *within* the system, rather than correlations *between* different realisations of it.
+<!-- TODO: write paragraph with any quantity. Look at wiki: autocorrelation and when we can write it as an expectation. Wiener-Khinchin theorem -->
 The above integral is known as the **autocorrelation** of the "signal" $s$ and can also be written in terms of the cross-correlation operator "$\star$":
 
 $$\Gamma (r) = \frac{1}{L^d}(s\star s)(r).$$
@@ -41,12 +45,11 @@ $$ \tilde{\Gamma}(q) = \frac{1}{L^d}|\tilde{s}|^2(q). $$
 
 #### Introducing randomness
 
-By now, we already have a pretty simple relationship between $\Gamma$ and $s$, with which we could already try to impose power law correlations. However, we don't want to end up with a field that is smoothly correlated, but rather want to see randomly located patches. As stated above, an idea to introduce randomness is to see split $s$ into two convoluted components, one for the randomness ($u$) and one for the correlations ($C$). In Fourier space, we have
+By now, we already have a fairly simple relationship between $\Gamma$ and $s$, with which we could already try to impose power law correlations. However, we don't want to end up with a field that is smoothly correlated, but rather want to see randomly located patches. As stated above, an idea to introduce randomness is to split $s$ into two convoluted components, one for the randomness ($u$) and one for the correlations ($C$). In Fourier space, we have
 
 $$ \tilde{s}(q) = \tilde{C}(q) \tilde{u}(q). $$
 
->**Note:** The only constraint on $u$ is that we require $\langle u \rangle_{spatial} = 0$, or equivalently, $\tilde{u}(q) = 0$. Otherwise, as one can deduce from the equation above, $\langle s \rangle_{spatial}$ can fluctuate greatly for different realisations of $\tilde{u}(0)$, which is an unwanted effect. This ie even more relevant considering that, in general, $\tilde{C}(0)$ can be very large.
-
+>**Note:** The only further constraint on $u$ is that we require $\langle u \rangle_{spatial} = 0$, or equivalently, $\tilde{u}(q) = 0$. Otherwise, as one can deduce from the equation above, $\langle s \rangle_{spatial}$ can fluctuate greatly for different realisations of $\tilde{u}(0)$, which is an unwanted effect. This ie even more relevant considering that, in general, $\tilde{C}(0)$ can be very large.
 
 We now show that the random component $\tilde{u}$ doesn't intervene in the correlation function, except for a multiplicative constant. Indeed, using the exact same reasoning as before, but backwards, we get
 
@@ -58,7 +61,7 @@ $$ \tilde{\Gamma} = |\tilde{C}|^2 \iff \Gamma = C \star C$$
 
 #### Derivation of $C$
 
-We can now impose any correlation function $\Gamma$ desired. Since only the complex norm of $\tilde{C}$ is involved, an infinite number of correlators can lead to the same result, where the relationship between its real and imaginary parts is the degree of freedom (in real space, we can see loosely see this as corresponding to the symmetry of $C$ around $x = 0$). For simplicity, we will opt for the natural choice $\tilde{C} \in \mathbb{R}$ with even symmetry: $\tilde{C}(q) = \tilde{C}(-q)$ [1]. In this convention,
+We can now impose any correlation function $\Gamma$ desired. Since only the complex norm of $\tilde{C}$ is involved, an infinite number of correlators can lead to the same result, where the relationship between its real and imaginary parts is the degree of freedom (in real space, we can loosely see this as corresponding to the symmetry of $C$ around $x = 0$). For simplicity, we will opt for the natural choice $\tilde{C} \in \mathbb{R}$ with even symmetry: $\tilde{C}(q) = \tilde{C}(-q)$ [1]. In this convention,
 
 $$ \tilde{C}(q) = \sqrt{\tilde{\Gamma}(q)},$$
 
@@ -69,8 +72,8 @@ In practice, we can proceed in 2 differents ways:
 The first, and easiest method is to directly impose the power law: $\Gamma (r) \stackrel{!}{\sim} |r|^{-\alpha}$, and to proceed by numerically computing the expression for $\tilde{C}(q)$. In the code, we call this the "$\alpha$ method", as we can directly choose the exponent. However, in this case, we don't obtain an analytical expression for $\tilde{C}$.
 
 2) $\beta$ *method - Analytical:*
-
-We can try to bypass this restriction by analytically deriving $\tilde{\Gamma}(q) = F[\Gamma(r)] \sim F[|r|^{-\alpha}]$. Under certain conditions (*WHICH ONES?*), the FT of a power law remains a power law [2]. In this case, $\tilde{C}(q)$ will be a power law with exponent $\beta$, s.t.
+We can try to bypass this restriction by analytically deriving $\tilde{\Gamma}(q) = F[\Gamma(r)] \sim F[|r|^{-\alpha}]$. Under certain conditions, the FT of a power law remains a power law [2]. In this case, $\tilde{C}(q)$ will be a power law with exponent $\beta$, s.t.
+<!-- (*WHICH ONES?*) -->
 
 $$
     \tilde{C}(q) \sim |q|^{-\beta} \iff \Gamma(r) \sim |r|^{2\beta - d},
@@ -81,6 +84,7 @@ $$
     \alpha = d - 2\beta
 $$
 
+<!-- TODO: resolve comments -->
 >[1]: This is also going to be valid for the correlator $C$ in real space, due to the nice property of the FT: $f \in \mathbb{R}^d$ even $\iff F[f] \in \mathbb{R}^d$ even.
 \
 \
@@ -92,7 +96,7 @@ Using scale-invariant correlations, we are cursed with ever-growing patch sizes 
 \
 \
 >**Note 2:**
-Furthermore, as $\Gamma(r)$ is singular at $r=0$, we will impose $\Gamma(0) = k$ for some $k\geq 0$ (*FIND OUT WHICH VALUE SUITS BEST*). This corresponds to $\tilde{s}(0) = \tilde{C}(0) \tilde{u}(0) = 0$ which sets the spatial average of $s$ to 0. Without this, it would be subject to random and extreme fluctuations in different system realisations, since $\tilde{u}(0)$ is random.
+Furthermore, as $\Gamma(r)$ is singular at $r=0$, we will impose $\Gamma(0) = k$ for some $k\geq 0$ (*FIND OUT WHICH VALUE SUITS BEST*).
 \
 \
 **Note 3 (WIP):** Limitations
@@ -107,7 +111,9 @@ We are now looking for a transformation $\sigma^Y$ = $f[s]$ which verifies the f
 
 
 1. $\sigma^Y(x) > 0, \forall x$
-2. $std(\sigma^Y) \ll \langle \sigma^Y \rangle$
+2. $std(\sigma^Y) \ll \langle \sigma^Y \rangle$.
+
+Note that we use the second condition as a first approach. Later, we will also look at cases where it doesn't hold.
 
 For condition 1, the most natural choice of a positive function is the exponential. However, choosing $f[s] = e^s$ we could be significantly distorting our field $s$ by exploding bigger values, which would also conflict with condition 2. To avoid this, we use
 
@@ -164,7 +170,7 @@ Below are two examples of the whole procedure,for $\beta = 0.8, \xi \to \infty$ 
 |**Step 2: Yield stress field $\sigma^Y$**|
 
 #### Verification of power law correlations
-
+<!-- TODO: check and rewrite paragraph -->
 To verify numerically that we indeed obtain the desired behavior, we could brute-force calculate correlation statistics on realisations of our system, which requires to compute the product $s(x)s(x-r)$ for each pair of pixels for a fixed distance $r$, and this $\forall r$. This computation is expensive and goes as $\mathcal{O}(N^3)$ However, there is an easier way: we already showed in equation 1.1 that $\Gamma (r)$ can be written as $\Gamma (r) = \frac{1}{L^d}  F^{-1}[\tilde{s}(q)\tilde{s}(-q)]$. As $s(x)$ is real, its FT is symmetric around 0 up to complex conjugation, which yields
 
 $$
@@ -200,7 +206,7 @@ To better understand the relationship between $\beta$ and $\alpha_m$, several si
 
 ## Elastoplastic model (EPM)
 
-Our implementation of the EPM is basically the same as the one used in "Elastoplastic description of sudden failure in athermal amorphous materials during quasistatic loading" by Popović et al. (2018). The code was simplified and adapted by T. de Geus and L. Bugnard. In the following, we provide a brief description of the conventions used.
+Our implementation of the EPM is essentially the same as the one used in "Elastoplastic description of sudden failure in athermal amorphous materials during quasistatic loading" by Popović et al. (2018). The code was simplified and adapted by T. de Geus and L. Bugnard. In the following, we provide a brief description of the conventions used.
 
 ### Brief description
 
