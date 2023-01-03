@@ -1,7 +1,7 @@
 import numpy as np
 from GooseEPM import SystemAthermal
 
-def evolution(system:SystemAthermal, nstep: int) -> tuple(np.ndarray, np.ndarray):
+def evolution(system:SystemAthermal, nstep: int) -> tuple[np.ndarray, np.ndarray]:
     """_summary_
 
     Args:
@@ -26,15 +26,17 @@ def evolution(system:SystemAthermal, nstep: int) -> tuple(np.ndarray, np.ndarray
 
     return sigmabar,epspbar
 
-def evolution_verbose(system:SystemAthermal, nstep: int) -> dict:
+def evolution_verbose(system:SystemAthermal, nsteps: int) -> dict:
     """Evolves the system by ``nstep`` and returns means and maps of ``sigma`` and ``epsp`` for each step. 
-    Additionally, returns number of relaxation steps and indexes of first failing block for each avalanche.
+    Additionally, returns propagator, mean yield stress field, number of relaxation steps and indexes of first failing block for each avalanche.
 
     Args:
         system (SystemAthermal): The system to evolve.
         nstep (int): The number of steps.
 
     Returns:
+        propagator (np.ndarray): Propagator.
+        sigmay_mean (np.ndarray): Mean yield stress field.
         sigmabar (np.ndarray): List of mean stress.
         epspbar (np.ndarray): List of mean plastic strain.
         sigma (list): List of stress maps.
@@ -42,23 +44,23 @@ def evolution_verbose(system:SystemAthermal, nstep: int) -> dict:
         relax_steps (np.ndarray): Number of relaxation steps for each avalanche.
         failing (np.ndarray): List of failing indexes.
     """
-    sigmabar = np.empty([nstep + 1])  # average stress
+    sigmabar = np.empty([nsteps + 1])  # average stress
     sigmabar[0] = system.sigmabar
     
-    epspbar = np.empty([nstep + 1])  # average plastic strain
+    epspbar = np.empty([nsteps + 1])  # average plastic strain
     epspbar[0] = np.mean(system.epsp)
     
     sigma = [system.sigma.copy()]
     
     epsp = [system.epsp.copy()]
     
-    relax_steps = np.empty([nstep + 1])
+    relax_steps = np.empty([nsteps + 1])
     relax_steps[0] = 0
     
-    failing = np.empty([nstep])
+    failing = np.empty([nsteps])
     
 
-    for i in range(1, nstep+1):
+    for i in range(1, nsteps+1):
         system.shiftImposedShear()
         relax_steps[i] = system.relaxAthermal()
         
@@ -70,7 +72,9 @@ def evolution_verbose(system:SystemAthermal, nstep: int) -> dict:
         
     gammabar = sigmabar + epspbar
     
-    return {'sigmabar': sigmabar,
+    return {'propagator': system.propagator,
+            'sigmay_mean': system.sigmay_mean,
+            'sigmabar': sigmabar,
             'epspbar': epspbar,
             'gammabar': gammabar,
             'sigma': sigma,
@@ -79,14 +83,14 @@ def evolution_verbose(system:SystemAthermal, nstep: int) -> dict:
             'failing': failing}
         
 
-def find_runtime_error(system:SystemAthermal, nstep:int, max_relaxation_steps = 100000) -> int:
+def find_runtime_error(system:SystemAthermal, nstep:int, max_relaxationsteps = 100000) -> int:
     """Finds at which macrostep a runtime error occurs due to failure to relax with microsteps.
     Returns 0 if no error is found.
 
     Args:
         system (SystemAthermal): The system to evolve.
         nstep (int): The number of steps.
-        max_relaxation_steps (int, optional): Maximum allowed relaxations steps. Defaults to 100000.
+        max_relaxationsteps (int, optional): Maximum allowed relaxations steps. Defaults to 100000.
 
     Returns:
         int: Iteration at which the error occurs. If 0, no error occured.
@@ -94,7 +98,7 @@ def find_runtime_error(system:SystemAthermal, nstep:int, max_relaxation_steps = 
 
     for i in range(1, nstep+1):
         try:
-            system.eventDrivenStep(max_steps = max_relaxation_steps)
+            system.eventDrivenStep(max_steps = max_relaxationsteps)
         except:
             print(f'RuntimeError at step {i}')
             return i

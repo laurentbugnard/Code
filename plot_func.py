@@ -3,9 +3,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.fftpack as fft
 from scipy.optimize import curve_fit
-plt.style.use('../config/style.mplstyle')
+plt.style.use('./config/style.mplstyle')
 from matplotlib.animation import FuncAnimation
 from sklearn.linear_model import LinearRegression
+import seaborn as sns
 
 #############IMSHOW CONFIGURATION#################
 
@@ -203,7 +204,7 @@ def cplot2(ax:plt.Axes, x:np.ndarray, f:np.ndarray, method = 'real-imag', lognor
 
 def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray, 
                  sigmabar:np.ndarray, epspbar:np.ndarray, gammabar:np.ndarray, 
-                 sigma:list[float], epsp:list[float], 
+                 sigma:list[np.ndarray], epsp:list[np.ndarray], 
                  relax_steps:np.ndarray, failing:np.ndarray, 
                  show_animation = False, rate = 1, fps = 1):
     """Visualization function which shows the whole evolution of the EPM. 
@@ -218,8 +219,8 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
         sigmabar (np.ndarray): Unpacked from ``evolution_verbose``.
         epspbar (np.ndarray): Unpacked from ``evolution_verbose``.
         gammabar (np.ndarray):Unpacked from ``evolution_verbose``.
-        sigma (list[float]): Unpacked from ``evolution_verbose``.
-        epsp (list[float]): Unpacked from ``evolution_verbose``.
+        sigma (list[np.ndarray]): Unpacked from ``evolution_verbose``.
+        epsp (list[np.ndarray]): Unpacked from ``evolution_verbose``.
         relax_steps (np.ndarUnpacked from ``evolution_verbose``.
         failing (np.ndarray): Unpacked from ``evolution_verbose``.
         show_animation (bool, optional): Determines whether an animation or just the final result should be returned. 
@@ -251,18 +252,23 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
     ax.set_title(r'$\epsilon_p(x)$')
 
     ###Parameters###
-    axes_parameters = subfigs[0,1].subplots(1,2)
+    axes_parameters = subfigs[0,1].subplots(2,2)
     subfigs[0,1].suptitle(f'L = {sigma[0].shape[0]}')
     #sigmaY(x)
-    ax = axes_parameters[0]
+    ax = axes_parameters[0,0]
     sigmaY_image = ax.imshow(sigmay_mean)
     sigmaY_cbar = subfigs[0,1].colorbar(sigmaY_image, aspect=5)
     ax.set_title(r'$<\sigma^Y(x)>$')
     #G(x)
-    ax = axes_parameters[1]
+    ax = axes_parameters[0,1]
     propagator_image = ax.imshow(propagator, norm = LogNorm())
     propagator_cbar = subfigs[0,1].colorbar(propagator_image, aspect = 5)
     ax.set_title(r'$G(x)$')
+    #Initial stability distribution
+    ax = axes_parameters[1,0]
+    stability = sns.histplot(ax=ax, data=sigma[0].ravel(), kde=True)
+    ax.set_title(r'$\sigma(x, t=0)$')
+    ax.set_xlim(-1,1)
 
     ###Plots###
     axes_plots = subfigs[1,0].subplots(1,2)
