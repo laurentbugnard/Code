@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.fftpack as fft
 from scipy.optimize import curve_fit
-plt.style.use('./config/style.mplstyle')
+plt.style.use('./modules/config/style.mplstyle')
 from matplotlib.animation import FuncAnimation
 from sklearn.linear_model import LinearRegression
 import seaborn as sns
@@ -22,7 +22,17 @@ def plot_map(f:np.ndarray, name:str, centered = False):
     
     if(centered):
         f = fft.fftshift(f)
-        plt.text(0,0,"centered", bbox={'facecolor': 'white', 'pad': 3})
+        L = f.shape[0]
+        xlabels, ylabels = np.fft.fftfreq(L)*L, np.fft.fftfreq(L)*L
+        xlabels.sort()
+        ylabels.sort()
+        
+        plt.gca().set_xticks(range(len(xlabels)))
+        plt.gca().set_yticks(range(len(ylabels)))
+        plt.gca().set_xticklabels(xlabels)
+        plt.gca().set_yticklabels(ylabels)
+        plt.locator_params(nbins=10)
+    
     plt.imshow(f, origin = 'lower')
     plt.colorbar()
     plt.title(name, fontsize = 20)
@@ -50,10 +60,8 @@ def plot_ft(f:np.ndarray, name:str, centered = True, logscale = False):
     #center if asked
     if(centered):
         f = fft.fftshift(f)
-    else:
-        #if not centered, make the label not centered
-        xlabels = np.concatenate((xlabels[xlabels >= 0], xlabels[xlabels < 0]))
-        ylabels = np.concatenate((ylabels[ylabels >= 0], ylabels[ylabels < 0]))
+        xlabels.sort()
+        ylabels.sort()
     
     #scale of the colormap
     if(logscale):

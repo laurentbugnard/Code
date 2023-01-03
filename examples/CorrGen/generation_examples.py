@@ -1,28 +1,31 @@
 #%% Imports
+import os
+os.chdir('C:/Users/laure/Documents/EPFL/MA/MA1/PCSL/EPM')
 import sys
-sys.path.append('../../modules')
-# from config.ipy_config import ipy_config
-# ipy_config()
-# from plot_func import *
-import CorrGen
+sys.path.append('./modules')
+from config.ipy_config import ipy_config
+ipy_config()
+from plot_func.plot_func import *
+from CorrGen.CorrGen import *
+
 
 #%% Generate 2 simulations
-sim1 = CorrGen(L = 100, xi = float('inf'), beta = 0.8)
-sim1.generate_fields(s_centered = True, s_normalized= True)
-sim1.generate_sigmaY(p = 0.1)
+alpha_example = CorrGen(L=100, xi=float('inf'))
+alpha_example.generate_fields(method='alpha', exponent=0.4)
+alpha_example.generate_sigmaY(p = 0.1)
 
-sim2 = CorrGen(L = 1000, xi = float('inf'), beta = 0.9)
-sim2.generate_fields(s_centered = True, s_normalized= True)
-sim2.generate_sigmaY(p = 0.1)
+beta_example = CorrGen(L = 100, xi = float('inf'))
+beta_example.generate_fields(method='beta', exponent=0.8)
+beta_example.generate_sigmaY(p = 0.1)
 # %%
-sim1.show_plots()
-plt.savefig(f'examples/gen1.png')
-sim2.show_plots()
-plt.savefig(f'examples/gen2.png')
+alpha_example.show_plots()
+plt.savefig(f'examples/CorrGen/alpha_example.png')
+beta_example.show_plots()
+plt.savefig(f'examples/CorrGen/beta_example.png')
 
 #%%
-sim1.show_final()
+alpha_example.show_final()
 plt.savefig(f'examples/fin1.png')
-sim2.show_final()
+beta_example.show_final()
 plt.savefig(f'examples/fin2.png')
 # %%

@@ -2,8 +2,9 @@ from matplotlib import pyplot as plt
 import numpy as np
 from scipy import fft
 import pandas as pd
+import sys
 
-from plot_func import plot_map, plot_ft, power_law, power_law_fit, regularized_power_law
+from plot_func.plot_func import plot_map, plot_ft, power_law, power_law_fit, regularized_power_law
 
 class CorrGen(object):
     """Object used to generate a random but power-law-correlated yield stress field, like described in the README.
@@ -115,6 +116,8 @@ class CorrGen(object):
             normes = np.sqrt(qx**2 + qy**2)
 
             self.C_t = 1/(normes**self.beta + self.xi**(-self.beta))
+            self.C_t[0,0] = 0 #REGULARIZE to avoid errors. 
+            #TODO: find out which is the best regularization
         
         self.C = fft.ifft2(self.C_t) #add C for completeness
         
@@ -136,41 +139,39 @@ class CorrGen(object):
     
     
 
-    def corr(self, mean_window = 0, cut = 1, plot = True, C_corr = False) -> float:
-        """Shows the resulting field ``s`` using imshow and plots the correlation function, along with a
-        power law fit. Returns the exponent of that fit.
+    def measure_corr(self, fourier=False, mean_window = 0, cut = 1, plot = True, scale='log') -> float:
+        """Measures the correlation functions for ``u``, ``C`` and ``s`` and plots them, along with a
+        power law fit in the ``s`` case. Returns the exponent of that fit.
 
         Args:
-            mean_window (int, optional): Window to perform the moving mean before fitting. Defaults to 0.
+            fourier (bool, optional): Determines whether the Fourier-space correlation function should be used. Defaults to False.
+            mean_window (int, optional): Window to perform the moving mean before fitting s correlations. Defaults to 0.
             cut (int, optional): Fraction of data considered in the regression. Defaults to 1.
             plot (bool, optional): Determines whether to show the plots or just compute the fitted exponent. Defaults to True.
-            C_corr (bool, optional): If True, the correlations are taken directly on ``C`` instead of ``s``. Defaults to False.
-
+            scale (str, optional): The scale of the plots: either ``'linear'``,``'log'`` or ``'semilog'``. Defaults to 'log'.
 
         Returns:
             float: Exponent of the power law fit.
         """
 
-        #get the correlations
-        if(C_corr):
-            K = get_corr_function(self.C)
-        else:
-            K = get_corr_function(self.s)
-            
-
-        #smoothen them
-        K_smooth = K
-        if (mean_window != 0):
-            K_smooth = np.convolve(K, np.ones(mean_window)/mean_window, mode='same') #moving mean
+        #get the correlation functions
+        K_u = get_corr_function(self.u, fourier=fourier)
+        K_C = get_corr_function(self.C, fourier=fourier)
+        K_s = get_corr_function(self.s, fourier=fourier)
         
         #prepare the x-axis
-        x = np.arange(0,K.size)
-
+        x = np.arange(K_s.size)
+            
+        #### FITTING s correlation function
+        #Smoothen
+        K_s_smooth = K_s
+        if (mean_window != 0):
+            K_s_smooth = np.convolve(K_s, np.ones(mean_window)/mean_window, mode='same') #moving mean
         
         #cut off the part not wanted for the fit
         cut_begin = 2 #cut out the correlation function at 0 (no meaning)
         cut_end = int(x.size*cut)
-        K_cut = K_smooth[cut_begin:cut_end]
+        K_cut = K_s_smooth[cut_begin:cut_end]
         x_cut = x[cut_begin:cut_end]
 
         #fit and predict (for the plot)
@@ -180,34 +181,60 @@ class CorrGen(object):
         if(plot):
             #prepare figure
             plt.figure(figsize = (20,8), dpi = 80)
-            plt.suptitle(fr'$L = {self.L}, \xi = {self.xi}, \beta = {self.beta}$', fontsize = 30)
+            if self.method == 'alpha':
+                plt.suptitle(fr'$L = {self.L}, \xi = {self.xi}, \alpha = {self.alpha}$', fontsize = 30)
+            elif self.method == 'beta':
+                plt.suptitle(fr'$L = {self.L}, \xi = {self.xi}, \beta = {self.beta}$', fontsize = 30)
+            
+            #plot u
+            plt.subplot(2,3,1)
+            plot_map(self.u,r'$u$')
+            #plot C
+            plt.subplot(2,3,2)
+            plot_map(self.C.real,r'$Re(C)$')
             #plot s
-            plt.subplot(1,3,1)
+            plt.subplot(2,3,3)
             plot_map(self.s.real,r'$Re(s)$')
 
+            
             #Plot the correlations and regression
-            plt.subplot(1,3,2)
-            plt.plot(x, K)
-            plt.plot(x, y, color = 'r', label = 'power law fit')
+            #u
+            plt.subplot(2,3,4)
+            if fourier: plt.title(r'$\tilde\Gamma_u$')
+            else: plt.title(r'$\Gamma_u$')
+            plt.plot(x, K_u)
+            if scale == 'log': plt.xscale('log'); plt.yscale('log')
+            elif scale == 'semilog': plt.yscale('log')
             plt.xlabel(r'$r$')
-            plt.ylabel(r'$\Gamma (r)$')
-
-            plt.legend()
-
-
-            #Again, but in loglog
-            plt.subplot(1,3,3)
-            plt.title(fr'$\alpha_m = {a:.2f}$', fontsize = 20)
-            plt.loglog(x, K)
+            if fourier: plt.ylabel(r'$\tilde\Gamma (r)$')
+            else: plt.ylabel(r'$\Gamma (r)$')
+            #C
+            plt.subplot(2,3,5)
+            if fourier: plt.title(r'$\tilde\Gamma_C$')
+            else: plt.title(r'$\Gamma_C$')
+            plt.plot(x, K_C)
+            if scale == 'log': plt.xscale('log'); plt.yscale('log')
+            elif scale == 'semilog': plt.yscale('log')
+            plt.xlabel(r'$r$')
+            #s
+            plt.subplot(2,3,6)
+            if fourier: plt.title(r'$\tilde\Gamma_s$')
+            else: plt.title(r'$\Gamma_s$')
+            plt.plot(x, K_s)
+            if scale == 'log': plt.xscale('log'); plt.yscale('log')
+            elif scale == 'semilog': plt.yscale('log')
             if(mean_window != 0):
-                plt.loglog(x, K_smooth, label = 'smooth')
-            plt.loglog(x, y, color = 'r', label = 'power law fit')
+                plt.plot(x, K_s_smooth, label = 'smooth')
+            plt.plot(x, y, color = 'r', label = fr'power law fit, $\alpha_m = {a:.2f}$')
             plt.axvline(x = x[cut_begin], linestyle = '--', color = 'k')
             plt.axvline(x = x[cut_end], linestyle = '--', color = 'k')
             plt.xlabel(r'$r$')
-            plt.ylabel(r'$\Gamma (r)$')
             plt.legend()
-            
+  
+  
+            plt.gcf().tight_layout()
+            figManager = plt.get_current_fig_manager()
+            figManager.window.showMaximized()
             plt.show()
 
         return a
@@ -235,6 +262,7 @@ class CorrGen(object):
         (``u``,``u_t``,``C``,``C_t``,``s``,``s_t``).
         """
         plt.figure(figsize = (25,12), dpi = 80)
+        
         if(self.method == 'beta'):
             plt.suptitle(fr'$L = {self.L}, \xi = {self.xi}, \beta = {self.beta}$', fontsize = 30)
         else:
@@ -261,6 +289,10 @@ class CorrGen(object):
         plt.subplot(2,3,6)
         plot_ft(self.s_t,r'$|\tilde{s}|$', logscale = True)
 
+        #tight and maximize window
+        plt.gcf().tight_layout()
+        figManager = plt.get_current_fig_manager()
+        figManager.window.showMaximized()
         plt.show()
     
     def show_final(self):
@@ -349,12 +381,13 @@ def scan(L_list:list[int], xi_list:list[float], exponent_list:list[float],
                 
     return list_corrgen
 
-def get_corr_function(f:np.ndarray, full_map = False, normalized = True) -> np.ndarray:
+def get_corr_function(f:np.ndarray, fourier=False, full_map = False, normalized = True) -> np.ndarray:
     """Returns the (auto)correlation function associated with the given field ``f``. If ``full_map = True``, a 2D complex map is returned.
-    Otherwise, isotropy is assumed and a 1D section of it is returned.
+    Otherwise, isotropy is imposed by calling ``isotropise`` and a 1D section of the result is returned.
 
     Args:
         f (np.ndarray): Field for which we want the correlation function.
+        fourier (bool, optional): Determines whether the Fourier-space correlation function should be returned. Defaults to False.
         full_map (bool, optional): Determines whether a full 2D complex map should be returned. Defaults to False.
         normalized (bool, optional): Determines whether the correlation function is normalized with the mean square of ``f``. Defaults to True.
 
@@ -367,12 +400,23 @@ def get_corr_function(f:np.ndarray, full_map = False, normalized = True) -> np.n
 
     f_t = fft.fft2(f) #get the fourier transform
     
-    K_map = fft.ifft2(np.abs(f_t)**2)/f.size #get correlation map (2D). See README for method used
-    K = K_map[0,:K_map.shape[1]//2] #get only a section of it (1D). #TODO find better solution.
+    #get correlation map (2D). See README for method used 
+    if fourier: #correlations in Fourier space
+        K_map = np.abs(f_t)**2/f.size 
+    else:
+        K_map = fft.ifft2(np.abs(f_t)**2)/f.size
+    
+    #isotropise to diminish fluctuations
+    K_map = isotropise(K_map)
+    
+    #get only a section of it (1D). #TODO find better solution
+    K = K_map[0,:K_map.shape[1]//2]
+
+    
     if(full_map):
         return K_map
     else:
-        if(normalized):
+        if normalized & (not fourier):
             return K.real / np.var(f) #TODO change it to actual mean square (?)
         else:
             return K.real
@@ -404,3 +448,22 @@ def get_values(corrgen_list, get_alpha_empirical = False) -> pd.DataFrame:
             df.iloc[i]["alpha_empirical"] = sim.corr(plot = False)
     
     return df
+
+
+def isotropise(f:np.ndarray) -> np.ndarray:
+    """Takes a 2D square array and returns the mean over its 4 possible 90 degrees rotations.
+
+    Args:
+        f (np.ndarray): 2D square array.
+
+    Returns:
+        np.ndarray: "Isotropized" (over 4 directions) array.
+    """
+    #extend periodically
+    f = np.r_[f, [f[0,:]]]
+    f = np.c_[f, f[:,0]]
+    
+    #average over 4 directions
+    f_iso = 0.25*(f + np.rot90(f,1) + np.rot90(f,2) + np.rot90(f,3))
+    
+    return f_iso
