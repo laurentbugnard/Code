@@ -1,12 +1,10 @@
 #%% Imports
-from get_corr_function import *
-from get_values import *
-from config.ipy_config import *
-from plot_func import *
-from power_law_fit import *
-from scan import *
-from CorrGen import *
-ipy_config()
+import sys
+sys.path.append('../../modules')
+# from config.ipy_config import ipy_config
+# ipy_config()
+# from plot_func import *
+import CorrGen
 
 #%% Generate 2 simulations
 sim1 = CorrGen(L = 100, xi = float('inf'), beta = 0.8)
