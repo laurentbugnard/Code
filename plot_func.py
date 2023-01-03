@@ -3,8 +3,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.fftpack as fft
 from scipy.optimize import curve_fit
-plt.style.use('../config/style.mplstyle')
+plt.style.use('./config/style.mplstyle')
 from matplotlib.animation import FuncAnimation
+from sklearn.linear_model import LinearRegression
+import seaborn as sns
 
 #############IMSHOW CONFIGURATION#################
 
@@ -72,20 +74,25 @@ def plot_ft(f:np.ndarray, name:str, centered = True, logscale = False):
     
 ############POWER LAW FITS#################
     
-def regularized_power_law(x:np.ndarray, c:float, a:float) -> np.ndarray:
+def regularized_power_law(x:np.ndarray, c:float, a:float, reg_value = 0.0) -> np.ndarray:
     """Power law with negative exponent: :math:`c x^{-a}`. The singularity at the origin is replaced by 0.
+    This is necessary, as we are working with Fourier-Transforms, which do not accept 'inf' values in the inputs.
+
 
     Args:
         x (np.ndarray): Function input.
         c (float): Multiplicative constant.
         a (float): Exponent.
+        reg_value (float): Value to impose at x = 0.
+
 
     Returns:
         np.ndarray: Regularized power law of ``x``.
     """
     
     f = c*(1/x)**a
-    f[f == float('inf')] = 0
+    f[f == float('inf')] = reg_value
+
     #TODO check what we should impose at 0
     return f
 
@@ -102,21 +109,29 @@ def power_law(x:np.ndarray, c:float, a:float) -> np.ndarray:
     """
     return c*(1/x)**a
 
-def power_law_fit(x:np.ndarray, y:np.ndarray) -> tuple(float,float):
-    """Fits a power law (negative exponent) to ``x`` and ``y`` using ``scipy.optimize.curve_fit``. 
+def power_law_fit(x:np.ndarray,y:np.ndarray) -> tuple[float,float]:
+    """Fits a power law (negative exponent) to ``x`` and ``y`` by linear regression on the log-log plot. 
     Returns the optimal parameters ``c`` and ``a``.
 
     Args:
         x (np.ndarray): x-axis.
         y (np.ndarray): y-axis.
 
+
     Returns:
         float: Multiplicative constant.
         float: Exponent (negative).
     """
     
-    popt, _ = curve_fit(power_law,x,y)
-    return popt
+    #filter out 0 and negative values for which the logarithm can not be taken
+    y_filtered = y[(x>0) & (y>0)]
+    x_filtered = x[(x>0) & (y>0)]
+    
+    lx = np.log(x_filtered)
+    ly = np.log(y_filtered)
+    lin_reg = LinearRegression().fit(lx.reshape(-1,1),ly)
+    
+    return np.exp(lin_reg.intercept_), -lin_reg.coef_[0]
 
 def plot_power_law_fit(x:np.ndarray, y:np.ndarray, label = "") -> float:
     """Generates a power law fit using ``power_law_fit`` and plots the result.
@@ -130,16 +145,17 @@ def plot_power_law_fit(x:np.ndarray, y:np.ndarray, label = "") -> float:
         float: Exponent (negative).
     """
 
+
     
     popt = power_law_fit(x, y)
     plt.scatter(x, y, label = label)
-    plt.plot(x, power_law(x, *popt), color = 'k', label = f'|slope| = {popt[0]}')
+    plt.plot(x, power_law(x, *popt), color = 'k', label = f'|slope| = {popt[1]}')
     plt.gca().set_xscale('log')
     plt.gca().set_yscale('log')
     plt.legend()
     
-    #TODO check if popt[0] is really the exponent
-    return popt[0]
+    return popt[1]
+
 
 ############COMPLEX PLOTS#################
 def cplot2(ax:plt.Axes, x:np.ndarray, f:np.ndarray, method = 'real-imag', lognorm = False):
@@ -188,7 +204,7 @@ def cplot2(ax:plt.Axes, x:np.ndarray, f:np.ndarray, method = 'real-imag', lognor
 
 def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray, 
                  sigmabar:np.ndarray, epspbar:np.ndarray, gammabar:np.ndarray, 
-                 sigma:list[float], epsp:list[float], 
+                 sigma:list[np.ndarray], epsp:list[np.ndarray], 
                  relax_steps:np.ndarray, failing:np.ndarray, 
                  show_animation = False, rate = 1, fps = 1):
     """Visualization function which shows the whole evolution of the EPM. 
@@ -203,8 +219,8 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
         sigmabar (np.ndarray): Unpacked from ``evolution_verbose``.
         epspbar (np.ndarray): Unpacked from ``evolution_verbose``.
         gammabar (np.ndarray):Unpacked from ``evolution_verbose``.
-        sigma (list[float]): Unpacked from ``evolution_verbose``.
-        epsp (list[float]): Unpacked from ``evolution_verbose``.
+        sigma (list[np.ndarray]): Unpacked from ``evolution_verbose``.
+        epsp (list[np.ndarray]): Unpacked from ``evolution_verbose``.
         relax_steps (np.ndarUnpacked from ``evolution_verbose``.
         failing (np.ndarray): Unpacked from ``evolution_verbose``.
         show_animation (bool, optional): Determines whether an animation or just the final result should be returned. 
@@ -236,18 +252,23 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
     ax.set_title(r'$\epsilon_p(x)$')
 
     ###Parameters###
-    axes_parameters = subfigs[0,1].subplots(1,2)
+    axes_parameters = subfigs[0,1].subplots(2,2)
     subfigs[0,1].suptitle(f'L = {sigma[0].shape[0]}')
     #sigmaY(x)
-    ax = axes_parameters[0]
+    ax = axes_parameters[0,0]
     sigmaY_image = ax.imshow(sigmay_mean)
     sigmaY_cbar = subfigs[0,1].colorbar(sigmaY_image, aspect=5)
     ax.set_title(r'$<\sigma^Y(x)>$')
     #G(x)
-    ax = axes_parameters[1]
+    ax = axes_parameters[0,1]
     propagator_image = ax.imshow(propagator, norm = LogNorm())
     propagator_cbar = subfigs[0,1].colorbar(propagator_image, aspect = 5)
     ax.set_title(r'$G(x)$')
+    #Initial stability distribution
+    ax = axes_parameters[1,0]
+    stability = sns.histplot(ax=ax, data=sigma[0].ravel(), kde=True)
+    ax.set_title(r'$\sigma(x, t=0)$')
+    ax.set_xlim(-1,1)
 
     ###Plots###
     axes_plots = subfigs[1,0].subplots(1,2)

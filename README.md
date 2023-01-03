@@ -36,6 +36,7 @@ $$\Gamma (r) = \frac{1}{L^d}(s\star s)(r).$$
 
 The advantage of using this form of the correlation function is that we can simplify this operation by going to Fourier space. Remember that the convolution theorem states that the FT converts convolutions into multiplications ($f \ast g \stackrel{F}{\rightarrow} \tilde{f} \cdot \tilde{g}$). It is easy to prove an equivalent theorem for the cross-correlation, with the only difference that the left term is replaced by its complex conjugate ($f \star g \stackrel{F}{\rightarrow} \overline{\tilde{f}} \cdot \tilde{g}$). For the autocorrelation, we obtain the power spectrum: this result is called the Wiener–Khinchin theorem ($f \star f \stackrel{F}{\rightarrow} |\tilde{f}|^2$). In our case:
 
+
 $$ \tilde{\Gamma}(q) = \frac{1}{L^d}|\tilde{s}|^2(q). $$
 
 #### Introducing randomness
@@ -43,6 +44,9 @@ $$ \tilde{\Gamma}(q) = \frac{1}{L^d}|\tilde{s}|^2(q). $$
 By now, we already have a pretty simple relationship between $\Gamma$ and $s$, with which we could already try to impose power law correlations. However, we don't want to end up with a field that is smoothly correlated, but rather want to see randomly located patches. As stated above, an idea to introduce randomness is to see split $s$ into two convoluted components, one for the randomness ($u$) and one for the correlations ($C$). In Fourier space, we have
 
 $$ \tilde{s}(q) = \tilde{C}(q) \tilde{u}(q). $$
+
+>**Note:** The only constraint on $u$ is that we require $\langle u \rangle_{spatial} = 0$, or equivalently, $\tilde{u}(q) = 0$. Otherwise, as one can deduce from the equation above, $\langle s \rangle_{spatial}$ can fluctuate greatly for different realisations of $\tilde{u}(0)$, which is an unwanted effect. This ie even more relevant considering that, in general, $\tilde{C}(0)$ can be very large.
+
 
 We now show that the random component $\tilde{u}$ doesn't intervene in the correlation function, except for a multiplicative constant. Indeed, using the exact same reasoning as before, but backwards, we get
 
@@ -61,18 +65,16 @@ $$ \tilde{C}(q) = \sqrt{\tilde{\Gamma}(q)},$$
 which is our final expression for the correlator, provided we know $\tilde{\Gamma}.$
 In practice, we can proceed in 2 differents ways:
 
-*1) $\alpha$ method - Numerical*
-
+1) $\alpha$ *method - Numerical:*
 The first, and easiest method is to directly impose the power law: $\Gamma (r) \stackrel{!}{\sim} |r|^{-\alpha}$, and to proceed by numerically computing the expression for $\tilde{C}(q)$. In the code, we call this the "$\alpha$ method", as we can directly choose the exponent. However, in this case, we don't obtain an analytical expression for $\tilde{C}$.
 
-*2) $\beta$ method - Analytical*
+2) $\beta$ *method - Analytical:*
 
 We can try to bypass this restriction by analytically deriving $\tilde{\Gamma}(q) = F[\Gamma(r)] \sim F[|r|^{-\alpha}]$. Under certain conditions (*WHICH ONES?*), the FT of a power law remains a power law [2]. In this case, $\tilde{C}(q)$ will be a power law with exponent $\beta$, s.t.
 
 $$
     \tilde{C}(q) \sim |q|^{-\beta} \iff \Gamma(r) \sim |r|^{2\beta - d},
 $$
-
 from which we finally derive a **relation between exponents**:
 
 $$
@@ -90,20 +92,19 @@ Using scale-invariant correlations, we are cursed with ever-growing patch sizes 
 \
 \
 >**Note 2:**
-Furthermore, as $\tilde{C}(q)$ is singular (or at least very big) at $q=0$, we will impose $\tilde{C}(0) = 0$. This corresponds to $\tilde{s}(0) = \tilde{C}(0) \tilde{u}(0) = 0$ which sets the spatial average of $s$ to 0. Without this, it would be subject to random and extreme fluctuations in different system realisations, since $\tilde{u}(0)$ is random.
+Furthermore, as $\Gamma(r)$ is singular at $r=0$, we will impose $\Gamma(0) = k$ for some $k\geq 0$ (*FIND OUT WHICH VALUE SUITS BEST*). This corresponds to $\tilde{s}(0) = \tilde{C}(0) \tilde{u}(0) = 0$ which sets the spatial average of $s$ to 0. Without this, it would be subject to random and extreme fluctuations in different system realisations, since $\tilde{u}(0)$ is random.
 \
 \
-<!-- >**Note 3:**
-Limitations
-The procedure described in the two previous steps has limitations on the values of $\beta$:
-1) $\alpha = 2(1-\beta)$ implies that we have to restrict ourselves to  $\beta < 1$ in order to keep $\alpha > 0$. Indeed, as can be seen further below, choosing $\beta > 1$ leads to correlations that are not distributed as a power law.
-2) Choosing $\beta \ll 1$ also leads to a breakdown, as the "correlator width" gets comparable to the pixel size, and our correlations become insignificant (the field $s$ looks just like the initial gaussian field $u$). -->
+**Note 3 (WIP):** Limitations
+The procedure described in the two previous steps has limitations on the values of $\beta$:1) $\alpha = 2(1-\beta)$ implies that we have to restrict ourselves to  $\beta < 1$ in order to keep $\alpha > 0$. Indeed, as can be seen further below, choosing $\beta > 1$ leads to correlations that are not distributed as a power law.2) Choosing $\beta \ll 1$ also leads to a breakdown, as the "correlator width" gets comparable to the pixel size, and our correlations become insignificant (the field $s$ looks just like the initial gaussian field $u$).
+
 <!-- TODO Make clear that this is only for method beta -->
 <!-- TODO add limitation of continuous vs. discrete case -->
 
 ### Yield stress field $\sigma^Y$
 
 We are now looking for a transformation $\sigma^Y$ = $f[s]$ which verifies the following conditions:
+
 
 1. $\sigma^Y(x) > 0, \forall x$
 2. $std(\sigma^Y) \ll \langle \sigma^Y \rangle$
@@ -122,37 +123,50 @@ std(\sigma^Y) &\approx p,
 $$
 
 provided we initially normalized $s$ to $std(s) = 1$. (*WRITE NOTE ABOUT COMPLEX DISTRIBUTIONS*) This scale-shift also has the advantage to preserve power law correlations. Indeed the correlation functions of $s$ and $\sigma^Y$ differ only by a constant $\frac{p^2}{1+p^2}$:
+
+
 $$
 \begin{align*}
 \Gamma_\sigma(r) &= \frac{\langle \sigma^Y(x) \sigma^Y(x-r)] \rangle - \langle \sigma^Y(x) \rangle \langle \sigma^Y(x-r) \rangle}{\langle (\sigma^Y)^2 \rangle} \\ &=\frac{\langle [1+ps(x)] [1+ps(x-r)] \rangle - \langle [1+ps(x)] \rangle \langle [1+ps(x-r)] \rangle}{\langle[1+ps]^2\rangle} \\ &= \frac{1 + p^2 \Gamma(r) - 1}{1 + p^2} = \frac{p^2}{1+p^2}\Gamma(r).
 \end{align*}
 $$
 
-### Implementation (WIP, not ready yet)
+### Implementation (WIP, not up to date)
 
-#### Examples
+#### $\alpha$ vs. $\beta$ method
+
+![0.2](images/avsb_b%3D0.2.png)
+![0.4](images/avsb_b%3D0.4.png)
+![0.6](images/avsb_b%3D0.6.png)
+![0.8](images/avsb_b%3D0.8.png)
+![1](images/avsb_b%3D1.png)
+![1.2](images/avsb_b%3D1.2.png)
+
+#### Examples for $\beta$ method
+
 
 Below are two examples of the whole procedure,for $\beta = 0.8, \xi \to \infty$  and $L = 100$ and $1000$ respectively. In step 1, each of the 3 fields $u$, $C$ and $s$ are plotted along with their FT. In step 2, we show $s$ again along with $\sigma^Y$. It should look the same, since it just corresponds to a shift, but we also restricted the colorbar to a range of 1 std above and below the mean, to make differences more visible.
 
 **L = 100**
 
-|![gen1](examples/gen1.png)|
+|![gen1](images/gen1.png)|
 |:---:|
 |**Step 1: Generating power law correlations**|
-|![gen1](examples/fin1.png)|
+|![gen1](images/fin1.png)|
 |**Step 2: Yield stress field $\sigma^Y$**|
 
 **L = 1000**
 
-|![gen2](examples/gen2.png)|
+|![gen2](images/gen2.png)|
 |:---:|
 |**Step 1: Generating power law correlations**|
-|![fin2](examples/fin2.png)|
+|![fin2](images/fin2.png)|
 |**Step 2: Yield stress field $\sigma^Y$**|
 
 #### Verification of power law correlations
 
-To verify numerically that we indeed obtain the desired behavior, we could brute-force calculate correlation statistics on realisations of our system, which requires to compute the product $s(x)s(x-r)$ for each pair of pixels for a fixed distance $r$, and this $\forall r$. This computation is expensive and goes as $\mathcal{O}(N^3)$ However, there is an easier way, once more using the convolution theorem. We already showed in equation 1.1, that $\Gamma (r)$ can be written as $\Gamma (r) = \frac{1}{L^d}  F^{-1}[\tilde{s}(q)\tilde{s}(-q)]$. As $s(x)$ is real, its FT is symmetric around 0 up to complex conjugation, which yields
+To verify numerically that we indeed obtain the desired behavior, we could brute-force calculate correlation statistics on realisations of our system, which requires to compute the product $s(x)s(x-r)$ for each pair of pixels for a fixed distance $r$, and this $\forall r$. This computation is expensive and goes as $\mathcal{O}(N^3)$ However, there is an easier way: we already showed in equation 1.1 that $\Gamma (r)$ can be written as $\Gamma (r) = \frac{1}{L^d}  F^{-1}[\tilde{s}(q)\tilde{s}(-q)]$. As $s(x)$ is real, its FT is symmetric around 0 up to complex conjugation, which yields
+
 $$
     \Gamma (r) = \frac{1}{L^d}  F^{-1}[|\tilde{s}|^2(q)].
 $$
@@ -160,24 +174,24 @@ This is way more efficient computationally, as the Fast Fourier Transform algori
 
 A few examples of numerical correlation measurements are shown in the figures below.
 
-|![corr0.8](examples/corr_beta=0.8.png)|
+|![corr0.8](images/corr_beta=0.8.png)|
 |:---:|
 |**Power law behaviour for $\beta = 0.8$**|
 |However, the measured exponent $\alpha_m = 0.64$ does not correspond to the predicted one $\alpha = 2(1-0.8) =0.4$. This is discussed further below.|
 
-|![corr1.1](examples/corr_beta=1.1.png)|
+|![corr1.1](images/corr_beta=1.1.png)|
 |:---:|
 |**Breakdown for $\beta > 1$**|
 |In this case, our analytical results are not valid anymore.|
 
-|![corr0.3](examples/corr_beta=0.3.png)|
+|![corr0.3](images/corr_beta=0.3.png)|
 |:---:|
 |**Breakdown for $\beta \ll 1$**|
 |In this case, the correlator is too narrow and we are left with an almost uncorrelated gaussian field.|
 
 To better understand the relationship between $\beta$ and $\alpha_m$, several simulations were made for a range of $\beta$'s and $L$'s. The plot below shows the results, along with the predicted behaviour $\alpha = 2(\beta -1)$.
 
-|![alpha_m_scan](results/alpha_m_scan.png)|
+|![alpha_m_scan](images/results/alpha_m_scan.png)|
 |:---:|
 |**$\alpha_{m}$ vs. predicted $\alpha$**|
 |We see that we fail to predict correct values for small $\beta$'s, no matter the system size $L$. This is due to resolution issues: the correlator has a width comparable to the pixel size. This doesn't depend on $L$ in our procedure, so increasing it doesn't solve the problem. For intermediary $\beta$'s, the prediction is slightly off, which is still an issue. For $\beta$'s close to 1, we see that $\alpha_m$ tends towards a plateau.|
