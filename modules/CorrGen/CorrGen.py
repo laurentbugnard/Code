@@ -156,7 +156,7 @@ class CorrGen(object):
 
         #get the correlation functions
         K_u = get_corr_function(self.u, fourier=fourier)
-        K_C = np.abs(get_corr_function(self.C, fourier=fourier))
+        K_C = get_corr_function(self.C, fourier=fourier)
         K_s = get_corr_function(self.s, fourier=fourier)
         
         #prepare the x-axis
@@ -219,8 +219,8 @@ class CorrGen(object):
             else: plt.ylabel(r'$\Gamma (r)$')
             #C
             plt.subplot(2,3,5)
-            if fourier: plt.title(r'$|\tilde\Gamma_C|$')
-            else: plt.title(r'$|\Gamma_C|$')
+            if fourier: plt.title(r'$\tilde\Gamma_C$')
+            else: plt.title(r'$\Gamma_C$')
             plt.plot(x, K_C)
             if scale == 'log': plt.xscale('log'); plt.yscale('log')
             elif scale == 'semilog': plt.yscale('log')

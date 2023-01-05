@@ -23,7 +23,8 @@ def plot_map(f:np.ndarray, name:str, centered = False):
     if(centered):
         f = fft.fftshift(f)
         L = f.shape[0]
-        xlabels, ylabels = np.fft.fftfreq(L)*L, np.fft.fftfreq(L)*L
+        xlabels = (np.fft.fftfreq(L)*L).astype(int)
+        ylabels = xlabels.copy()
         xlabels.sort()
         ylabels.sort()
         
@@ -326,11 +327,12 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
 
 
 def set_alpha(ax, alpha):
-    ax.tick_params(axis="x", colors=(0,0,0,alpha))
     for spine in ax.spines.values():
         spine.set_color((0,0,0,alpha))
     ax.tick_params(axis="x", colors=(0,0,0,alpha))
     ax.tick_params(axis="y", colors=(0,0,0,alpha))
+    ax.xaxis.label.set_color((0,0,0,alpha))
+    ax.yaxis.label.set_color((0,0,0,alpha))
 
     for child in ax.get_children():
         try:
@@ -339,8 +341,11 @@ def set_alpha(ax, alpha):
             pass
         
         
-def focus_on(axes, focus_ax, alpha=0.3):
+def focus_on(all_axes, focus_axes, alpha=0.3):
     
-    for ax in axes:
-        if ax != focus_ax:
+    if type(focus_axes) != list:
+        focus_axes = [focus_axes]
+    
+    for ax in all_axes:
+        if not(ax in focus_axes):
             set_alpha(ax, alpha)

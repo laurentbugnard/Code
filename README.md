@@ -136,11 +136,12 @@ $$
 
 ### Implementation and limitations
 
-**Examples:**
+#### Examples
+
 To make things clear, two examples of the whole procedure (i.e. including intermediary fields) are shown below, one for the $\alpha$-method and one for the $\beta$-method.
 In step 1, each of the 3 fields $u$, $C$ and $s$ are plotted along with their FT. In step 2, we show $s$ again along with $\sigma^Y$. It should look the same, since it just corresponds to a shift, but we also restricted the colorbar to a range of 1 std above and below the mean, to make differences more visible.
 
-#### $\alpha$-method
+##### $\alpha$-method
 
 |![alpha_example](examples/CorrGen/alpha_example.png)|
 |:---:|
@@ -148,7 +149,7 @@ In step 1, each of the 3 fields $u$, $C$ and $s$ are plotted along with their FT
 |![alpha_example_final](examples/CorrGen/alpha_example_final.png)|
 |**Step 2: Yield stress field $\sigma^Y$**|
 
-#### $\beta$-method
+##### $\beta$-method
 
 |![beta_example](examples/CorrGen/beta_example.png)|
 |:---:|
@@ -160,37 +161,37 @@ One can see that the two methods are not equivalent (note that exponent were cho
 
 It remains to be determined which are the advantages and disadvantages of each method. *A priori*, it is not clear whether there is a unique correct method - which would be the case if the final field is uniquely determined by its correlation function. We think there exist several different "ways" to obtain the same correlation function, even when starting from the same gaussian field $u$. However, some problems arise when actually trying to verify the power law correlations by measuring them, which is discussed in the next paragraph.
 
-**Verification of power law correlations:**
+#### Verification of power law correlations
+
 To verify numerically that we indeed obtain the desired behavior, we could brute-force calculate correlation statistics on realisations of our system, which requires to compute the product $s(x)s(x-r)$ for each pair of pixels for a fixed distance $r$, and this $\forall r$. This computation is expensive and goes as $\mathcal{O}(N^3)$ However, there is an easier way: we already showed that the correlation function can be written as $\Gamma (r) = \frac{1}{L^d} F^{-1}[|\tilde{s}|^2].$ This is way more efficient computationally, as the Fast Fourier Transform algorithm has a $\mathcal{O}(N\log{N})$ complexity.
 
-A few examples of numerical correlation measurements are shown in the figures below.
-<!-- TODO: add figures where it works, for each method -->
-<!-- TODO: add figures where it doesn't work, and explain why: 2 contributions: doesn't work for C already (nothing to do?), doesn't work for s because of fluctuations in u (otherwise it would work perfectly) -->
-<!-- TODO: paragraph about comparing alpha vs beta -->
+A few examples of numerical correlation measurements in the case of the $\alpha$-method are shown in the figures below.
 
-|![corr0.8](images/corr_beta=0.8.png)|
+|**Working cases: $0.5 \lesssim \alpha \lesssim 1.2$**|
 |:---:|
-|**Power law behaviour for $\beta = 0.8$**|
-|However, the measured exponent $\alpha_m = 0.64$ does not correspond to the predicted one $\alpha = 2(1-0.8) =0.4$. This is discussed further below.|
+|![alpha_working_1](examples/CorrGen/corr_alpha_working_1.png)|
+|![alpha_working_2](examples/CorrGen/corr_alpha_working_2.png)|
+|![alpha_working_3](examples/CorrGen/corr_alpha_working_3.png)|
+|For $L=1000$ and this range of $\alpha$, we obtain decent results for measured correlations. Only the long-range correlations (above $r\approx 10^2$) start to be noisy. This is due to the correlations in $u$ that are not exactly vanishing for finite $L$. Even if these fluctuations seem huge on a logarithmic scale, they are negligible on a linear scale and for our purposes.|
 
-|![corr1.1](images/corr_beta=1.1.png)|
+|**Lower limit case: $\alpha = 0.1$**|
 |:---:|
-|**Breakdown for $\beta > 1$**|
-|In this case, our analytical results are not valid anymore.|
+|![alpha_low_100](examples/CorrGen/corr_alpha_low_100.png)|
+|![alpha_low_1000](examples/CorrGen/corr_alpha_low_1000.png)|
+|![alpha_low_5000](examples/CorrGen/corr_alpha_low_5000.png)|
+|For lower $\alpha$, i.e. a broad correlator, $\Gamma_s$ in log space becomes too concave for a power law. This is very striking in low $L$ cases, as can be seen in the $L=100$ case, where the disproportionately high short-range correlations result in a "blurring" effect. As one can see, the issue already starts in the correlation function $\Gamma_C$ (note that tweaking the regularization value at 0 for the imposed power law has some impact on this and could potentially solve the problem - *to be further investigated*). However, it seems that the fluctuations in $\Gamma_u$ play a role too. For now, we will not use such low values for $\alpha$, but one should note that this unwanted effect diminishes for higher $L$, even if very slowly and with mediocre $\alpha_m$ values.|
 
-|![corr0.3](images/corr_beta=0.3.png)|
+|**Higher limit case: $\alpha > 2$**|
 |:---:|
-|**Breakdown for $\beta \ll 1$**|
-|In this case, the correlator is too narrow and we are left with an almost uncorrelated gaussian field.|
+|![alpha_high_2](examples/CorrGen/corr_alpha_high_2.png)|
+|![alpha_high_3](examples/CorrGen/corr_alpha_high_3.png)|
+|![alpha_high_4](examples/CorrGen/corr_alpha_high_4.png)|
+|As $\alpha$ grows, the correlator becomes too narrow and its decay is too fast compared to the pixel size, which also leads to a breakdown: the exponent measured in $\Gamma_C$ seems to converge to a value around $\alpha_m \approx 2.7$. Unlike before, this is not a finite $L$ effect, but a discretization effect - increasing the system size will have no effect on the relationship between the correlator decay and the pixel size. Furthermore, fluctuations in $u$ become non-negligible, since their magnitude quickly become comparable to the magnitude of the correlator, even at short distances. Visually, this is traduced into a map which is almost non distinguishable anymore from the original gaussian map - hence not interesting for our purposes.|
+<!-- TODO: check if that makes sense since power law doesn't have a typical size. Then the only problem is the fluctuations in u. -->
 
-To better understand the relationship between $\beta$ and $\alpha_m$, several simulations were made for a range of $\beta$'s and $L$'s. The plot below shows the results, along with the predicted behaviour $\alpha = 2(\beta -1)$.
+#### Conclusion
 
-|![alpha_m_scan](images/results/alpha_m_scan.png)|
-|:---:|
-|**$\alpha_{m}$ vs. predicted $\alpha$**|
-|We see that we fail to predict correct values for small $\beta$'s, no matter the system size $L$. This is due to resolution issues: the correlator has a width comparable to the pixel size. This doesn't depend on $L$ in our procedure, so increasing it doesn't solve the problem. For intermediary $\beta$'s, the prediction is slightly off, which is still an issue. For $\beta$'s close to 1, we see that $\alpha_m$ tends towards a plateau.|
-
-**Note:** As can be seen in these figures, the procedure doesn't give optimal results, we still have to figure out how to enhance it.
+For our project, we will probably use the $\alpha$-method, as its behavior is more predictable, especially for a reasonable range of values $0.5 < \alpha < 1.2$. We shall not take values over $\alpha > 2$, since this leads to vanishing correlations. On the other hand, lower values, $\alpha < 0.5$, would be interesting to investigate and we thus need to improve the procedure for this case.
 
 ## Elastoplastic model (EPM)
 
@@ -223,3 +224,5 @@ The initial stress is randomized, using ...(*DESCRIBE PROCEDURE*), which keeps i
 We use the Eshelby elastic stress propagator $G^E(r) = \frac{cos(4\theta)}{\pi r^2}$, which is then discretized using the convention described by Rossi et al. (2022). It is adapted for a strain-driven protocol and allows to very easily evolve the system for each site $\sigma_j$ at each event-driven step using the single equation $\sigma_j \rightarrow \sigma_j + \Delta\sigma_{ext} + \sum_{i} G_{j,i} \Delta\sigma_i$, where $\Delta\sigma_{ext}$ is the applied quasistatic load, the $\Delta\sigma_i$ are the local failure stress drops and $G_{j,i}$ is the discretized propagator.
 - **Updating of yield stresses:**
 After a plastic event, we choose to sample a new yield stress for the location of failure from a normal distribution. The mean corresponds to the initial value, thus approximately preserving the initial yield map. The standard deviation is a parameter that can vary and quantifies to what extent the local resistance of the medium can vary.
+
+## SUITE DU PROJET
