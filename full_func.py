@@ -1,11 +1,15 @@
 #%%
-from data_func import *
+import os
+os.chdir('C:/Users/laure/Documents/EPFL/MA/MA1/PCSL/EPM')
+import sys
+sys.path.append('./modules')
+from data_func.data_func import *
 import numpy as np
 from GooseEPM import elshelby_propagator
 from GooseEPM import SystemAthermal
-from EPM_func import *
+from EPM_func.EPM_func import *
 import h5py
-from CorrGen import CorrGen
+from CorrGen.CorrGen import CorrGen
 from datetime import datetime
 
 #%%

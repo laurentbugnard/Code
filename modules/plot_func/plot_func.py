@@ -243,8 +243,8 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
     """
     
     plt.close('all')
-    fig = plt.figure()
-    subfigs = fig.subfigures(2,2,wspace=0.3, width_ratios=[2,1])
+    fig = plt.figure(constrained_layout=True)
+    subfigs = fig.subfigures(2,2,wspace=0.1, width_ratios=[2,1])
     plt.subplots_adjust(wspace=0.4, bottom=0.15)
 
     ###Images###

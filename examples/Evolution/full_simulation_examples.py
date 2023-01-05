@@ -1,28 +1,28 @@
 #%%
+import os
+os.chdir('C:/Users/laure/Documents/EPFL/MA/MA1/PCSL/EPM')
 import sys
-sys.path.append('../') #include parent folder in the path
-import numpy as np
-from GooseEPM import elshelby_propagator
-from GooseEPM import SystemAthermal
-import matplotlib.pyplot as plt
-from EPM_func import *
-plt.style.use('./config/style.mplstyle')
-from config.ipy_config import *
+sys.path.append('./modules')
+from config.ipy_config import ipy_config
 ipy_config()
+
+import numpy as np
+import matplotlib.pyplot as plt
+from EPM_func.EPM_func import *
 from matplotlib.animation import FFMpegWriter
-from plot_func import *
+from plot_func.plot_func import *
 from full_func import full_simulation
 
 #%% PARAMETERS TO SIMULATE OR IMPORT
 params = {
-    'L': 20,
+    'L': 100,
     'xi': float('inf'),
     'method': 'alpha',
     'exponent': 0.8,
     'p': 0.1,
     'stabCoef': 2
 }
-nsteps=20
+nsteps=1000
 
 sim_results = full_simulation(params, nsteps, seed=1)
 

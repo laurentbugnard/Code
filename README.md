@@ -228,4 +228,9 @@ We use the Eshelby elastic stress propagator $G^E(r) = \frac{cos(4\theta)}{\pi r
 - **Updating of yield stresses:**
 After a plastic event, we choose to sample a new yield stress for the location of failure from a normal distribution. The mean corresponds to the initial value, thus approximately preserving the initial yield map. The standard deviation is a parameter that can vary and quantifies to what extent the local resistance of the medium can vary.
 
-## SUITE DU PROJET
+### Examples
+
+Reproducing the results of Popović et al. (2018):
+
+
+## Next steps
