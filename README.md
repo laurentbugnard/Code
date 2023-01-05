@@ -8,6 +8,8 @@ The behavior of complex amorphous materials under stress is a topic of great int
 
 <!-- TODO: make difference between spatial average and realisations average -->
 
+<!-- TODO: écrire tout en terme de white noise et pink noise -->
+
 ### Power law correlations
 
 We would like to generate an inhomogeneous 2D-map $s(\vec{x}), \vec{x} \in \mathbb{R}^2$, which fulfills two requirements:
@@ -95,7 +97,7 @@ Using scale-invariant correlations, we are cursed with ever-growing patch sizes 
 \
 \
 >**Note 2:**
-Furthermore, as $\Gamma(r)$ is singular at $r=0$, which we shall regularize by setting $\Gamma(0) = 0. The singularity would not be a problem in a continuous setting, since the point $r=0$ has a null measure in 2D space; however, in the discrete setting, pixels have a finite measure, and by keeping the singularity, the effect of the correlator would be to infinitely correlate each pixel of the initial gaussian with itself - which is equivalent to zero correlations with other pixels. The problem with this regularization approach is that any point $s(x_0)$ will be independent of $u(x_0)$ and instead be a "weighted average" of the neighbourhood $u(x)$ for $x \in B_d(x_0)$, where $d$ is the typical scale of the power law which arises due to the regularization. Thus, small $\alpha \iff$ large $d$ will lead to an overall blurring, as this weighted average becomes increasingly homogeneous.
+Furthermore, $\Gamma(r)$ is singular at $r=0$, which we shall regularize by setting $\Gamma(0) = k for some $k>0$. The singularity would not be a problem in a continuous setting, since the point $r=0$ has a null measure in 2D space; however, in the discrete setting, pixels have a finite measure, and by keeping the singularity, the effect of the correlator would be to infinitely correlate each pixel of the initial gaussian with itself - which is equivalent to zero correlations with other pixels. We could set $k=0$, but the problem with this approach is that any point $s(x_0)$ will be independent of $u(x_0)$ and instead be a "weighted average" of the neighbourhood $u(x)$ for $x \in B_d(x_0)$, where $d$ is the typical scale of the power law which arises due to the regularization. Thus, small $\alpha \iff$ large $d$ will lead to an overall blurring, as this weighted average becomes increasingly homogeneous. To find the correct $k$, we need to integrate the power law around 0 in order to know which weight the center pixel should get.
 \
 \
 **Note 3 (WIP):** Limitations
@@ -172,7 +174,8 @@ A few examples of numerical correlation measurements in the case of the $\alpha$
 |![alpha_working_1](examples/CorrGen/corr_alpha_working_1.png)|
 |![alpha_working_2](examples/CorrGen/corr_alpha_working_2.png)|
 |![alpha_working_3](examples/CorrGen/corr_alpha_working_3.png)|
-|For $L=1000$ and this range of $\alpha$, we obtain decent results for measured correlations. Only the long-range correlations (above $r\approx 10^2$) start to be noisy. This is due to the correlations in $u$ that are not exactly vanishing for finite $L$. Even if these fluctuations seem huge on a logarithmic scale, they are negligible on a linear scale and for our purposes.|
+|For $L=1000$ and this range of $\alpha$, we obtain decent results for measured correlations. Only the long-range correlations (above $r\approx 10^2$) start to be noisy. This is due to the correlations in $u$ that are not exactly vanishing for finite $L$. Even if these fluctuations seem huge on a logarithmic scale, they are negligible on a linear scale and for our purposes. Also, they will vanish when averaging over different realisations.|
+<!-- TODO: faire des moyennes sur plusieurs réalisations!! -->
 
 |**Lower limit case: $\alpha = 0.1$**|
 |:---:|
