@@ -40,7 +40,6 @@ $$\Gamma (r) = \frac{1}{L^d}(s\star s)(r).$$
 
 The advantage of using this form of the correlation function is that we can simplify this operation by going to Fourier space. Remember that the convolution theorem states that the FT converts convolutions into multiplications ($f \ast g \stackrel{F}{\rightarrow} \tilde{f} \cdot \tilde{g}$). It is easy to prove an equivalent theorem for the cross-correlation, with the only difference that the left term is replaced by its complex conjugate ($f \star g \stackrel{F}{\rightarrow} \overline{\tilde{f}} \cdot \tilde{g}$). For the autocorrelation, we obtain the power spectrum: this result is called the Wiener–Khinchin theorem ($f \star f \stackrel{F}{\rightarrow} |\tilde{f}|^2$). In our case:
 
-
 $$ \tilde{\Gamma}(q) = \frac{1}{L^d}|\tilde{s}|^2(q). $$
 
 #### Introducing randomness
@@ -109,7 +108,6 @@ The procedure described in the two previous steps has limitations on the values 
 
 We are now looking for a transformation $\sigma^Y$ = $f[s]$ which verifies the following conditions:
 
-
 1. $\sigma^Y(x) > 0, \forall x$
 2. $std(\sigma^Y) \ll \langle \sigma^Y \rangle$.
 
@@ -130,55 +128,45 @@ $$
 
 provided we initially normalized $s$ to $std(s) = 1$. (*WRITE NOTE ABOUT COMPLEX DISTRIBUTIONS*) This scale-shift also has the advantage to preserve power law correlations. Indeed the correlation functions of $s$ and $\sigma^Y$ differ only by a constant $\frac{p^2}{1+p^2}$:
 
-
 $$
 \begin{align*}
 \Gamma_\sigma(r) &= \frac{\langle \sigma^Y(x) \sigma^Y(x-r)] \rangle - \langle \sigma^Y(x) \rangle \langle \sigma^Y(x-r) \rangle}{\langle (\sigma^Y)^2 \rangle} \\ &=\frac{\langle [1+ps(x)] [1+ps(x-r)] \rangle - \langle [1+ps(x)] \rangle \langle [1+ps(x-r)] \rangle}{\langle[1+ps]^2\rangle} \\ &= \frac{1 + p^2 \Gamma(r) - 1}{1 + p^2} = \frac{p^2}{1+p^2}\Gamma(r).
 \end{align*}
 $$
 
-### Implementation (WIP, not up to date)
+### Implementation and limitations
 
-#### $\alpha$ vs. $\beta$ method
+**Examples:**
+To make things clear, two examples of the whole procedure (i.e. including intermediary fields) are shown below, one for the $\alpha$-method and one for the $\beta$-method.
+In step 1, each of the 3 fields $u$, $C$ and $s$ are plotted along with their FT. In step 2, we show $s$ again along with $\sigma^Y$. It should look the same, since it just corresponds to a shift, but we also restricted the colorbar to a range of 1 std above and below the mean, to make differences more visible.
 
-![0.2](images/avsb_b%3D0.2.png)
-![0.4](images/avsb_b%3D0.4.png)
-![0.6](images/avsb_b%3D0.6.png)
-![0.8](images/avsb_b%3D0.8.png)
-![1](images/avsb_b%3D1.png)
-![1.2](images/avsb_b%3D1.2.png)
+#### $\alpha$-method
 
-#### Examples for $\beta$ method
-
-
-Below are two examples of the whole procedure,for $\beta = 0.8, \xi \to \infty$  and $L = 100$ and $1000$ respectively. In step 1, each of the 3 fields $u$, $C$ and $s$ are plotted along with their FT. In step 2, we show $s$ again along with $\sigma^Y$. It should look the same, since it just corresponds to a shift, but we also restricted the colorbar to a range of 1 std above and below the mean, to make differences more visible.
-
-**L = 100**
-
-|![gen1](images/gen1.png)|
+|![alpha_example](examples/CorrGen/alpha_example.png)|
 |:---:|
 |**Step 1: Generating power law correlations**|
-|![gen1](images/fin1.png)|
+|![alpha_example_final](examples/CorrGen/alpha_example_final.png)|
 |**Step 2: Yield stress field $\sigma^Y$**|
 
-**L = 1000**
+#### $\beta$-method
 
-|![gen2](images/gen2.png)|
+|![beta_example](examples/CorrGen/beta_example.png)|
 |:---:|
 |**Step 1: Generating power law correlations**|
-|![fin2](images/fin2.png)|
+|![beta_example_final](examples/CorrGen/beta_example_final.png)|
 |**Step 2: Yield stress field $\sigma^Y$**|
 
-#### Verification of power law correlations
-<!-- TODO: check and rewrite paragraph -->
-To verify numerically that we indeed obtain the desired behavior, we could brute-force calculate correlation statistics on realisations of our system, which requires to compute the product $s(x)s(x-r)$ for each pair of pixels for a fixed distance $r$, and this $\forall r$. This computation is expensive and goes as $\mathcal{O}(N^3)$ However, there is an easier way: we already showed in equation 1.1 that $\Gamma (r)$ can be written as $\Gamma (r) = \frac{1}{L^d}  F^{-1}[\tilde{s}(q)\tilde{s}(-q)]$. As $s(x)$ is real, its FT is symmetric around 0 up to complex conjugation, which yields
+One can see that the two methods are not equivalent (note that exponent were chosen to satisfy the relationship between $\alpha = 2(1-\beta)$) The $\alpha$-method leads to a field that seems more "blurred".
 
-$$
-    \Gamma (r) = \frac{1}{L^d}  F^{-1}[|\tilde{s}|^2(q)].
-$$
-This is way more efficient computationally, as the Fast Fourier Transform algorithm has a $\mathcal{O}(N\log{N})$ complexity.
+It remains to be determined which are the advantages and disadvantages of each method. *A priori*, it is not clear whether there is a unique correct method - which would be the case if the final field is uniquely determined by its correlation function. We think there exist several different "ways" to obtain the same correlation function, even when starting from the same gaussian field $u$. However, some problems arise when actually trying to verify the power law correlations by measuring them, which is discussed in the next paragraph.
+
+**Verification of power law correlations:**
+To verify numerically that we indeed obtain the desired behavior, we could brute-force calculate correlation statistics on realisations of our system, which requires to compute the product $s(x)s(x-r)$ for each pair of pixels for a fixed distance $r$, and this $\forall r$. This computation is expensive and goes as $\mathcal{O}(N^3)$ However, there is an easier way: we already showed that the correlation function can be written as $\Gamma (r) = \frac{1}{L^d} F^{-1}[|\tilde{s}|^2].$ This is way more efficient computationally, as the Fast Fourier Transform algorithm has a $\mathcal{O}(N\log{N})$ complexity.
 
 A few examples of numerical correlation measurements are shown in the figures below.
+<!-- TODO: add figures where it works, for each method -->
+<!-- TODO: add figures where it doesn't work, and explain why: 2 contributions: doesn't work for C already (nothing to do?), doesn't work for s because of fluctuations in u (otherwise it would work perfectly) -->
+<!-- TODO: paragraph about comparing alpha vs beta -->
 
 |![corr0.8](images/corr_beta=0.8.png)|
 |:---:|

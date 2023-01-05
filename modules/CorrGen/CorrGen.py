@@ -156,27 +156,36 @@ class CorrGen(object):
 
         #get the correlation functions
         K_u = get_corr_function(self.u, fourier=fourier)
-        K_C = get_corr_function(self.C, fourier=fourier)
+        K_C = np.abs(get_corr_function(self.C, fourier=fourier))
         K_s = get_corr_function(self.s, fourier=fourier)
         
         #prepare the x-axis
         x = np.arange(K_s.size)
+        #cut off the part not wanted for the fit
+        cut_begin_C = 2 #cut out the correlation function at 0 (no meaning)
+        cut_end_C = x.size
+        cut_begin_s = 2 
+        cut_end_s = int(x.size*cut)
             
         #### FITTING s correlation function
-        #Smoothen
-        K_s_smooth = K_s
-        if (mean_window != 0):
-            K_s_smooth = np.convolve(K_s, np.ones(mean_window)/mean_window, mode='same') #moving mean
-        
-        #cut off the part not wanted for the fit
-        cut_begin = 2 #cut out the correlation function at 0 (no meaning)
-        cut_end = int(x.size*cut)
-        K_cut = K_s_smooth[cut_begin:cut_end]
-        x_cut = x[cut_begin:cut_end]
+        def fit_corr(K, cut_begin, cut_end):
+            #Smoothen
+            K_smooth = K
+            if (mean_window != 0):
+                K_smooth = np.convolve(K, np.ones(mean_window)/mean_window, mode='same') #moving mean
+            
+            K_cut = K_smooth[cut_begin:cut_end]
+            x_cut = x[cut_begin:cut_end]
 
-        #fit and predict (for the plot)
-        c, a = power_law_fit(x_cut,K_cut)
-        y = power_law(x,c,a)
+            #fit and predict (for the plot)
+            c, a = power_law_fit(x_cut,K_cut)
+            y = power_law(x,c,a)
+            
+            return y, a
+        
+        y_C, a_C = fit_corr(K_C, cut_begin_C, cut_end_C)
+        y_s, a_s = fit_corr(K_s, cut_begin_s, cut_end_s)
+        
 
         if(plot):
             #prepare figure
@@ -191,7 +200,7 @@ class CorrGen(object):
             plot_map(self.u,r'$u$')
             #plot C
             plt.subplot(2,3,2)
-            plot_map(self.C.real,r'$Re(C)$')
+            plot_map(self.C.real,r'$Re(C)$', centered=True)
             #plot s
             plt.subplot(2,3,3)
             plot_map(self.s.real,r'$Re(s)$')
@@ -210,12 +219,16 @@ class CorrGen(object):
             else: plt.ylabel(r'$\Gamma (r)$')
             #C
             plt.subplot(2,3,5)
-            if fourier: plt.title(r'$\tilde\Gamma_C$')
-            else: plt.title(r'$\Gamma_C$')
+            if fourier: plt.title(r'$|\tilde\Gamma_C|$')
+            else: plt.title(r'$|\Gamma_C|$')
             plt.plot(x, K_C)
             if scale == 'log': plt.xscale('log'); plt.yscale('log')
             elif scale == 'semilog': plt.yscale('log')
+            plt.plot(x, y_C, color = 'r', label = fr'power law fit, $\alpha_m = {a_C:.4f}$')
+            plt.axvline(x = x[cut_begin_C], linestyle = '--', color = 'k')
+            plt.axvline(x = x[cut_end_C-1], linestyle = '--', color = 'k')
             plt.xlabel(r'$r$')
+            plt.legend()
             #s
             plt.subplot(2,3,6)
             if fourier: plt.title(r'$\tilde\Gamma_s$')
@@ -223,13 +236,12 @@ class CorrGen(object):
             plt.plot(x, K_s)
             if scale == 'log': plt.xscale('log'); plt.yscale('log')
             elif scale == 'semilog': plt.yscale('log')
-            if(mean_window != 0):
-                plt.plot(x, K_s_smooth, label = 'smooth')
-            plt.plot(x, y, color = 'r', label = fr'power law fit, $\alpha_m = {a:.2f}$')
-            plt.axvline(x = x[cut_begin], linestyle = '--', color = 'k')
-            plt.axvline(x = x[cut_end], linestyle = '--', color = 'k')
+            plt.plot(x, y_s, color = 'r', label = fr'power law fit, $\alpha_m = {a_s:.4f}$')
+            plt.axvline(x = x[cut_begin_s], linestyle = '--', color = 'k')
+            plt.axvline(x = x[cut_end_s-1], linestyle = '--', color = 'k')
             plt.xlabel(r'$r$')
             plt.legend()
+            
   
   
             plt.gcf().tight_layout()
@@ -237,7 +249,7 @@ class CorrGen(object):
             figManager.window.showMaximized()
             plt.show()
 
-        return a
+        return a_s
 
     def show_u(self):
         """This function just shows ``u`` and its correlation function, which should 0 everywhere 
