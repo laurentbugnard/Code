@@ -95,7 +95,7 @@ Using scale-invariant correlations, we are cursed with ever-growing patch sizes 
 \
 \
 >**Note 2:**
-Furthermore, as $\Gamma(r)$ is singular at $r=0$, we will impose $\Gamma(0) = k$ for some $k\geq 0$ (*FIND OUT WHICH VALUE SUITS BEST*).
+Furthermore, as $\Gamma(r)$ is singular at $r=0$, which we shall regularize by setting $\Gamma(0) = 0. The singularity would not be a problem in a continuous setting, since the point $r=0$ has a null measure in 2D space; however, in the discrete setting, pixels have a finite measure, and by keeping the singularity, the effect of the correlator would be to infinitely correlate each pixel of the initial gaussian with itself - which is equivalent to zero correlations with other pixels. The problem with this regularization approach is that any point $s(x_0)$ will be independent of $u(x_0)$ and instead be a "weighted average" of the neighbourhood $u(x)$ for $x \in B_d(x_0)$, where $d$ is the typical scale of the power law which arises due to the regularization. Thus, small $\alpha \iff$ large $d$ will lead to an overall blurring, as this weighted average becomes increasingly homogeneous.
 \
 \
 **Note 3 (WIP):** Limitations
@@ -179,7 +179,7 @@ A few examples of numerical correlation measurements in the case of the $\alpha$
 |![alpha_low_100](examples/CorrGen/corr_alpha_low_100.png)|
 |![alpha_low_1000](examples/CorrGen/corr_alpha_low_1000.png)|
 |![alpha_low_5000](examples/CorrGen/corr_alpha_low_5000.png)|
-|For lower $\alpha$, i.e. a broad correlator, $\Gamma_s$ in log space becomes too concave for a power law. This is very striking in low $L$ cases, as can be seen in the $L=100$ case, where the disproportionately high short-range correlations result in a "blurring" effect. As one can see, the issue already starts in the correlation function $\Gamma_C$ (note that tweaking the regularization value at 0 for the imposed power law has some impact on this and could potentially solve the problem - *to be further investigated*). However, it seems that the fluctuations in $\Gamma_u$ play a role too. For now, we will not use such low values for $\alpha$, but one should note that this unwanted effect diminishes for higher $L$, even if very slowly and with mediocre $\alpha_m$ values.|
+|For lower $\alpha$, i.e. a broad correlator, $\Gamma_s$ in log space becomes too concave for a power law. This is very striking in low $L$ cases, as can be seen in the $L=100$ case, where the disproportionately high short-range correlations result in a "blurring" effect. As one can see, the issue already starts in the correlation function $\Gamma_C$ (here, the regularization value at 0 (see **Note 2**) plays a role - since). However, it seems that the fluctuations in $\Gamma_u$ play a role too. For now, we will not use such low values for $\alpha$, but one should note that this unwanted effect diminishes for higher $L$, even if very slowly and with mediocre $\alpha_m$ values.|
 
 |**Higher limit case: $\alpha > 2$**|
 |:---:|

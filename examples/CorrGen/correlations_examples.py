@@ -30,12 +30,12 @@ from CorrGen.CorrGen import *
 # alpha_limit_low_5000 = CorrGen(L = 5000, xi = float('inf'))
 # alpha_limit_low_5000.generate_fields(method = 'alpha', exponent= 0.1)
 
-alpha_limit_high_2 = CorrGen(L = 1000, xi = float('inf'))
-alpha_limit_high_2.generate_fields(method = 'alpha', exponent=2)
-alpha_limit_high_3 = CorrGen(L = 1000, xi = float('inf'))
-alpha_limit_high_3.generate_fields(method = 'alpha', exponent=3)
-alpha_limit_high_4 = CorrGen(L = 1000, xi = float('inf'))
-alpha_limit_high_4.generate_fields(method = 'alpha', exponent=4)
+# alpha_limit_high_2 = CorrGen(L = 1000, xi = float('inf'))
+# alpha_limit_high_2.generate_fields(method = 'alpha', exponent=2)
+# alpha_limit_high_3 = CorrGen(L = 1000, xi = float('inf'))
+# alpha_limit_high_3.generate_fields(method = 'alpha', exponent=3)
+# alpha_limit_high_4 = CorrGen(L = 1000, xi = float('inf'))
+# alpha_limit_high_4.generate_fields(method = 'alpha', exponent=4)
 
 
 # %%
@@ -59,15 +59,15 @@ alpha_limit_high_4.generate_fields(method = 'alpha', exponent=4)
 # focus_on(plt.gcf().axes, [plt.gcf().axes[4], plt.gcf().axes[5], plt.gcf().axes[7], plt.gcf().axes[8]])
 # plt.savefig('./examples/CorrGen/corr_alpha_low_5000.png')
 
-alpha_limit_high_2.measure_corr(scale='log', cut = 0.015)
-focus_on(plt.gcf().axes, [plt.gcf().axes[4], plt.gcf().axes[5], plt.gcf().axes[7], plt.gcf().axes[8]])
-plt.savefig('./examples/CorrGen/corr_alpha_high_2.png')
-alpha_limit_high_3.measure_corr(scale='log', cut = 0.015)
-focus_on(plt.gcf().axes, [plt.gcf().axes[4], plt.gcf().axes[5], plt.gcf().axes[7], plt.gcf().axes[8]])
-plt.savefig('./examples/CorrGen/corr_alpha_high_3.png')
-alpha_limit_high_4.measure_corr(scale='log', cut = 0.015)
-focus_on(plt.gcf().axes, [plt.gcf().axes[4], plt.gcf().axes[5], plt.gcf().axes[7], plt.gcf().axes[8]])
-plt.savefig('./examples/CorrGen/corr_alpha_high_4.png')
+# alpha_limit_high_2.measure_corr(scale='log', cut = 0.015)
+# focus_on(plt.gcf().axes, [plt.gcf().axes[4], plt.gcf().axes[5], plt.gcf().axes[7], plt.gcf().axes[8]])
+# plt.savefig('./examples/CorrGen/corr_alpha_high_2.png')
+# alpha_limit_high_3.measure_corr(scale='log', cut = 0.015)
+# focus_on(plt.gcf().axes, [plt.gcf().axes[4], plt.gcf().axes[5], plt.gcf().axes[7], plt.gcf().axes[8]])
+# plt.savefig('./examples/CorrGen/corr_alpha_high_3.png')
+# alpha_limit_high_4.measure_corr(scale='log', cut = 0.015)
+# focus_on(plt.gcf().axes, [plt.gcf().axes[4], plt.gcf().axes[5], plt.gcf().axes[7], plt.gcf().axes[8]])
+# plt.savefig('./examples/CorrGen/corr_alpha_high_4.png')
 
 
 # %%
