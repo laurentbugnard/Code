@@ -323,3 +323,24 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
         return FuncAnimation(fig, animate, frames=int(np.floor(len(sigma)/rate)) -1 , interval= int(1/fps*1000))
     
     return fig
+
+
+def set_alpha(ax, alpha):
+    ax.tick_params(axis="x", colors=(0,0,0,alpha))
+    for spine in ax.spines.values():
+        spine.set_color((0,0,0,alpha))
+    ax.tick_params(axis="x", colors=(0,0,0,alpha))
+    ax.tick_params(axis="y", colors=(0,0,0,alpha))
+
+    for child in ax.get_children():
+        try:
+            child.set_alpha(alpha)
+        except:
+            pass
+        
+        
+def focus_on(axes, focus_ax, alpha=0.3):
+    
+    for ax in axes:
+        if ax != focus_ax:
+            set_alpha(ax, alpha)

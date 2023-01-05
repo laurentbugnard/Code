@@ -25,7 +25,7 @@ plt.savefig(f'examples/CorrGen/beta_example.png')
 
 #%%
 alpha_example.show_final()
-plt.savefig(f'examples/fin1.png')
+plt.savefig(f'examples/CorrGen/alpha_example_final.png')
 beta_example.show_final()
-plt.savefig(f'examples/fin2.png')
+plt.savefig(f'examples/CorrGen/beta_example_final.png')
 # %%
