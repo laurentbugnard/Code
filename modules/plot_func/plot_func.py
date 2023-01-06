@@ -244,7 +244,6 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
         depending on ``show_animation``.
     """
     
-    plt.close('all')
     fig = plt.figure(constrained_layout=True)
     subfigs = fig.subfigures(2,2,wspace=0, hspace=0, width_ratios=[2,1])
     plt.subplots_adjust(wspace=0.4, bottom=0.15)
@@ -282,6 +281,8 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
     #G(x)
     ax = axes_parameters[0,1]
     propagator_image = ax.imshow(propagator, norm = LogNorm())
+    ax.set_xticks([])
+    ax.set_yticks([])
     propagator_cbar = subfigs[0,1].colorbar(propagator_image, aspect = 5)
     ax.set_title(r'$G(x)$', fontsize=15)
     #Initial stability distribution
@@ -339,6 +340,7 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
         avalanche_size.set_data(np.arange(frame*rate + 1), relax_steps[0:frame*rate + 1])
 
     if(show_animation):
+        plt.close('all')
         return FuncAnimation(fig, animate, frames=int(np.floor(len(sigma)/rate)) -1 , interval= int(1/fps*1000))
     
     return fig

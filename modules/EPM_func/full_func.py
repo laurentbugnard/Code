@@ -14,15 +14,22 @@ from datetime import datetime
 
 #%%
 
-def full_simulation(params, nsteps, seed=0, save=True):
+def full_simulation(params, nsteps, seed=0, homogeneous=False, save=True, file='./data/data.hdf5'):
     
     #Prepare CorrGen parameters for the output
-    CorrGen_params = {'xi': params['xi'], 'method': params['method'],
-                        'exponent': params['exponent'], 'p': params['p']}
+    CorrGen_params=None
+    if not homogeneous:
+        CorrGen_params = {'xi': params['xi'], 'method': params['method'],
+                            'exponent': params['exponent'], 'p': params['p']}
+    
     #Give a standardized name to the simulation according to conventions
     name = to_str(params) + f'/seed={seed}'
     
-    with h5py.File('./data/data.hdf5', 'r+') as f:
+    #check if file already exists
+    if os.path.exists(file): mode = 'r+'
+    else: mode = 'w'
+    
+    with h5py.File(file, mode=mode) as f:
         
         ### First, check if the simulation already exists ###
         if name in f:
@@ -64,15 +71,21 @@ def full_simulation(params, nsteps, seed=0, save=True):
                 del f[name] #TODO: don't restart from 0, but from last state instead
         
         ### Otherwise, do the simulation ###
-        cg = CorrGen(L=params['L'], xi=params['xi'])
-        cg.generate_fields(method=params['method'], exponent=params['exponent'], seed=seed)
-        cg.generate_sigmaY(p=params['p'])
+        
+        if homogeneous:
+            sigmay_mean = np.ones((params['L'], params['L']))
+        else:
+            cg = CorrGen(L=params['L'], xi=params['xi'])
+            cg.generate_fields(method=params['method'], exponent=params['exponent'], seed=seed)
+            cg.generate_sigmaY(p=params['p'])
+            sigmay_mean = cg.sigmaY
+            
 
         #Initialize
         system = SystemAthermal(
             *elshelby_propagator(L=params['L']),
-            sigmay_mean=cg.sigmaY,
-            sigmay_std=0.0 * np.ones_like(cg.sigmaY),
+            sigmay_mean=sigmay_mean,
+            sigmay_std=0.0 * np.ones_like(sigmay_mean),
             seed=seed,
             init_random_stress=True
         )

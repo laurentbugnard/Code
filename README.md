@@ -85,7 +85,7 @@ $$
     \alpha = d - 2\beta
 $$
 
-<!-- TODO: resolve comments -->
+<!-- TODO: CITE SOMETHING FOR THE CUTOFF SIZE IN THE beta method case -->
 >[1]: This is also going to be valid for the correlator $C$ in real space, due to the nice property of the FT: $f \in \mathbb{R}^d$ even $\iff F[f] \in \mathbb{R}^d$ even.
 \
 \
@@ -93,15 +93,11 @@ $$
 \
 \
 >**Note 1:**
-Using scale-invariant correlations, we are cursed with ever-growing patch sizes as our system size $L$ grows. Thus, in practice, we will use a cutoff size $\xi$, such that $\xi \ll L$. In the $\alpha$ method case, we can directly add an exponential cutoff $\Gamma (r) \stackrel{!}{\sim} |r|^{-\alpha} e^{-r/\xi}$. In the $\beta$ method case, one can show (*CITE SOMETHING*) that using the correlator: $\tilde{C}(q) \sim \frac{1}{|q|^{\beta} + \xi^{-\beta}}$ will lead to similar (*OR SAME?*) results.
+Using scale-invariant correlations, we are cursed with ever-growing patch sizes as our system size $L$ grows. Thus, in practice, we will use a cutoff size $\xi$, such that $\xi \ll L$. In the $\alpha$ method case, we can directly add an exponential cutoff $\Gamma (r) \stackrel{!}{\sim} |r|^{-\alpha} e^{-r/\xi}$. In the $\beta$ method case, one can show that using the correlator: $\tilde{C}(q) \sim \frac{1}{|q|^{\beta} + \xi^{-\beta}}$ will lead to similar results.
 \
 \
 >**Note 2:**
-Furthermore, $\Gamma(r)$ is singular at $r=0$, which we shall regularize by setting $\Gamma(0) = k for some $k>0$. The singularity would not be a problem in a continuous setting, since the point $r=0$ has a null measure in 2D space; however, in the discrete setting, pixels have a finite measure, and by keeping the singularity, the effect of the correlator would be to infinitely correlate each pixel of the initial gaussian with itself - which is equivalent to zero correlations with other pixels. We could set $k=0$, but the problem with this approach is that any point $s(x_0)$ will be independent of $u(x_0)$ and instead be a "weighted average" of the neighbourhood $u(x)$ for $x \in B_d(x_0)$, where $d$ is the typical scale of the power law which arises due to the regularization. Thus, small $\alpha \iff$ large $d$ will lead to an overall blurring, as this weighted average becomes increasingly homogeneous. To find the correct $k$, we need to integrate the power law around 0 in order to know which weight the center pixel should get.
-\
-\
-**Note 3 (WIP):** Limitations
-The procedure described in the two previous steps has limitations on the values of $\beta$:1) $\alpha = 2(1-\beta)$ implies that we have to restrict ourselves to  $\beta < 1$ in order to keep $\alpha > 0$. Indeed, as can be seen further below, choosing $\beta > 1$ leads to correlations that are not distributed as a power law.2) Choosing $\beta \ll 1$ also leads to a breakdown, as the "correlator width" gets comparable to the pixel size, and our correlations become insignificant (the field $s$ looks just like the initial gaussian field $u$).
+Furthermore, $\Gamma(r)$ is singular at $r=0$, which we shall regularize by setting $\Gamma(0) = k$ for some $k>0$. The singularity would not be a problem in a continuous setting, since the point $r=0$ has a null measure in 2D space; however, in the discrete setting, pixels have a finite measure, and by keeping the singularity, the effect of the correlator would be to infinitely correlate each pixel of the initial gaussian with itself - which is equivalent to zero correlations with other pixels. We could set $k=0$, but the problem with this approach is that any point $s(x_0)$ will be independent of $u(x_0)$ and instead be a "weighted average" of the neighbourhood $u(x)$ for $x \in B_d(x_0)$, where $d$ is the typical scale of the power law which arises due to the regularization. Thus, small $\alpha \iff$ large $d$ will lead to an overall blurring, as this weighted average becomes increasingly homogeneous. To find the correct $k$, we need to integrate the power law around 0 in order to know which weight the center pixel should get.
 
 <!-- TODO Make clear that this is only for method beta -->
 <!-- TODO add limitation of continuous vs. discrete case -->
@@ -128,7 +124,9 @@ std(\sigma^Y) &\approx p,
 \end{align*}
 $$
 
-provided we initially normalized $s$ to $std(s) = 1$. (*WRITE NOTE ABOUT COMPLEX DISTRIBUTIONS*) This scale-shift also has the advantage to preserve power law correlations. Indeed the correlation functions of $s$ and $\sigma^Y$ differ only by a constant $\frac{p^2}{1+p^2}$:
+provided we initially normalized $s$ to $std(s) = 1$. This scale-shift also has the advantage to preserve power law correlations. Indeed the correlation functions of $s$ and $\sigma^Y$ differ only by a constant $\frac{p^2}{1+p^2}$:
+
+<!-- TODO: write note about complex distributions -->
 
 $$
 \begin{align*}
@@ -138,9 +136,9 @@ $$
 
 ### Implementation and limitations
 
-#### Examples
+#### Examples of field generations
 
-To make things clear, two examples of the whole procedure (i.e. including intermediary fields) are shown below, one for the $\alpha$-method and one for the $\beta$-method.
+To make things more intuitive, two examples of the whole procedure (i.e. including intermediary fields) are shown below, one for the $\alpha$-method and one for the $\beta$-method.
 In step 1, each of the 3 fields $u$, $C$ and $s$ are plotted along with their FT. In step 2, we show $s$ again along with $\sigma^Y$. It should look the same, since it just corresponds to a shift, but we also restricted the colorbar to a range of 1 std above and below the mean, to make differences more visible.
 
 ##### $\alpha$-method
@@ -203,10 +201,11 @@ Our implementation of the EPM is essentially the same as the one used in "Elasto
 ### Brief description
 
 We use an elastoplastic model which is:
+<!-- TODO: cite something for the tensorial vs scalar values-->
 
 - defined on a **2D square** system of **linear dimension L** (in pixels),
 - under **pure shear** conditions,
-- which allows us to reduce tensorial stress and strain to **scalar** values (this is a reasonable approximation *CITE*).
+- which, as an approximation, allows us to reduce tensorial stress and strain to **scalar** values.
 - A **strain-driven** protocol is used,
 - and the system is driven by **quasistatic loading**. This means that at each timestep, the overall stress is increased by the smallest possible value such that a single cell (the weakest) yields.
 - This induces a **plastic strain** at the location of failure,
@@ -214,7 +213,7 @@ We use an elastoplastic model which is:
 - This can lead to **avalanches**, i.e. new instabilities in other cells. The system thus needs to **relax**,
 - which is done by sequentially choosing a **random cell among the unstable ones** and letting it yield in the same way, until all cells are stabilized.
 - The **yield stresses** are **power law correlated** like described above.
-- Furthermore, each step corresponds to an **increase in time** of ...(*COMPLETE*)
+<!-- TODO: Furthermore, each step corresponds to an **increase in time** of ...(*COMPLETE*) -->
 <!-- Compléter le timestep. Bien différencier relaxation step ou spatial particle failure step -->
 
 ### Some clarifications
@@ -222,14 +221,29 @@ We use an elastoplastic model which is:
 For completeness, we provide further detail about the system's initialization, the propagator and the updating of yield stresses:
 
 - **Preparation:**
-The initial stress is randomized, using ...(*DESCRIBE PROCEDURE*), which keeps its overall sum (and mean) to zero. Since it can not be ruled out that some cells are already unstable, the system is initially relaxed.
+The initial stress is randomized, using a procedure which keeps its overall sum (and mean) to zero. Since it can not be ruled out that some cells are already unstable, the system is initially relaxed.
 - **Propagator:**
 We use the Eshelby elastic stress propagator $G^E(r) = \frac{cos(4\theta)}{\pi r^2}$, which is then discretized using the convention described by Rossi et al. (2022). It is adapted for a strain-driven protocol and allows to very easily evolve the system for each site $\sigma_j$ at each event-driven step using the single equation $\sigma_j \rightarrow \sigma_j + \Delta\sigma_{ext} + \sum_{i} G_{j,i} \Delta\sigma_i$, where $\Delta\sigma_{ext}$ is the applied quasistatic load, the $\Delta\sigma_i$ are the local failure stress drops and $G_{j,i}$ is the discretized propagator.
 - **Updating of yield stresses:**
 After a plastic event, we choose to sample a new yield stress for the location of failure from a normal distribution. The mean corresponds to the initial value, thus approximately preserving the initial yield map. The standard deviation is a parameter that can vary and quantifies to what extent the local resistance of the medium can vary.
 
-### Examples
+### Examples of evolution
 
-Reproducing the results of Popović et al. (2018):
+In the following, we show early examples of the evolution of the EPM under different parameters. An in-depth analysis remains to be done.
 
-## Next steps
+|**Reproducing the results of Popović et al. (2018)**|
+|:---:|
+|![homog_flow](examples/Evolution/homog_flow.png)|
+|![homog_failure](examples/Evolution/homog_failure.png)|
+|As expected, the effect of the initial stability on the material's response (Popović et al., 2018) in the case of a homogeneous yield stress field $\sigma^Y$ is also observed in our EPM: higher initial stability leads to shear localization in a narrow band.|
+
+|**Introducing a heterogeneous yield stress field**|
+|:---:|
+|![progressive_failure](examples/Evolution/progressive_failure.png)|
+|An interesting first observation is the emergence of a shear band which is not caused by a global failure, but persists in the stationary regime, as can be seen on the stress-strain curve. This is not observed in all cases, but for some ranges of parameters. Here. $\alpha = 0.8$ and $p = 0.5$.|
+
+## Conclusion and next steps
+
+As a result of this initial part of the project, we described two methods to generate 2D power law correlated random noise. We briefly analyzed the performance and limitations of the $\alpha$-method. As a followup, we could do the same for the $\beta$-method and possibly add other, widely used procedures, such as *pink noise* or *Perlin noise* generation.
+
+We then proceeded to build an EPM model that suits our purposes, based on the work of Popović et al. (2018), which was tested on a few parameters and configurations. This opens up a wide range of questions and research directions. Some ideas for further analysis are studying how stationary shear bands emerge or the effect of the non-homogeneous yield stress field on the shape (roughness, thickness) of these bands. Most importantly, we will be trying to find traces of the power law and exponent used in the yield stress field.
