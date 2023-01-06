@@ -232,5 +232,4 @@ After a plastic event, we choose to sample a new yield stress for the location o
 
 Reproducing the results of Popović et al. (2018):
 
-
 ## Next steps

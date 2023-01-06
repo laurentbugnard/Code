@@ -214,7 +214,8 @@ def cplot2(ax:plt.Axes, x:np.ndarray, f:np.ndarray, method = 'real-imag', lognor
 def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray, 
                  sigmabar:np.ndarray, epspbar:np.ndarray, gammabar:np.ndarray, 
                  sigma:list[np.ndarray], epsp:list[np.ndarray], 
-                 relax_steps:np.ndarray, failing:np.ndarray, 
+                 relax_steps:np.ndarray, failing:np.ndarray,
+                 CorrGen_params = None,
                  show_animation = False, rate = 1, fps = 1):
     """Visualization function which shows the whole evolution of the EPM. 
     Top-left pannel: Evolution of stress and plastic strain fields.
@@ -232,6 +233,7 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
         epsp (list[np.ndarray]): Unpacked from ``evolution_verbose``.
         relax_steps (np.ndarUnpacked from ``evolution_verbose``.
         failing (np.ndarray): Unpacked from ``evolution_verbose``.
+        CorrGen_params (dict, optional): Added in ``full_simulation``. Defaults to None.
         show_animation (bool, optional): Determines whether an animation or just the final result should be returned. 
         Defaults to False.
         rate (int, optional): Number of data points per frame for the animation. Defaults to 1.
@@ -244,10 +246,11 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
     
     plt.close('all')
     fig = plt.figure(constrained_layout=True)
-    subfigs = fig.subfigures(2,2,wspace=0.1, width_ratios=[2,1])
+    subfigs = fig.subfigures(2,2,wspace=0, hspace=0, width_ratios=[2,1])
     plt.subplots_adjust(wspace=0.4, bottom=0.15)
 
     ###Images###
+    subfigs[0,0].set_facecolor('0.95')
     axes_images = subfigs[0,0].subplots(1,2)
     #sigma(x)
     ax = axes_images[0]
@@ -261,25 +264,37 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
     ax.set_title(r'$\epsilon_p(x)$')
 
     ###Parameters###
+    subfigs[0,1].set_facecolor('0.75')
     axes_parameters = subfigs[0,1].subplots(2,2)
-    subfigs[0,1].suptitle(f'L = {sigma[0].shape[0]}')
+    if CorrGen_params == None: subfigs[0,1].suptitle(f'L = {sigma[0].shape[0]}', fontsize=18)
+    else:
+        if CorrGen_params['method'] == 'alpha': 
+            exponent_title = rf'$\alpha = {CorrGen_params["exponent"]}$, '
+        elif CorrGen_params['method'] == 'beta':
+            exponent_title = rf'$\beta = {CorrGen_params["exponent"]}$, '
+        subfigs[0,1].suptitle(fr'L = {sigma[0].shape[0]}, $\xi$ = {CorrGen_params["xi"]}, ' +
+                              exponent_title + f'p = {CorrGen_params["p"]}', fontsize=18)
     #sigmaY(x)
     ax = axes_parameters[0,0]
     sigmaY_image = ax.imshow(sigmay_mean)
     sigmaY_cbar = subfigs[0,1].colorbar(sigmaY_image, aspect=5)
-    ax.set_title(r'$<\sigma^Y(x)>$')
+    ax.set_title(r'$<\sigma^Y(x)>$', fontsize=15)
     #G(x)
     ax = axes_parameters[0,1]
     propagator_image = ax.imshow(propagator, norm = LogNorm())
     propagator_cbar = subfigs[0,1].colorbar(propagator_image, aspect = 5)
-    ax.set_title(r'$G(x)$')
+    ax.set_title(r'$G(x)$', fontsize=15)
     #Initial stability distribution
     ax = axes_parameters[1,0]
     stability = sns.histplot(ax=ax, data=sigma[0].ravel(), kde=True)
-    ax.set_title(r'$\sigma(x, t=0)$')
+    stability.set_ylabel('count', fontsize=12)
+    ax.set_title(r'$\sigma(x, t=0)$ distribution', fontsize=15)
     ax.set_xlim(-1,1)
+    #
+    axes_parameters[1,1].axis('off')
 
     ###Plots###
+    subfigs[1,0].set_facecolor('0.75')
     axes_plots = subfigs[1,0].subplots(1,2)
 
     ax = axes_plots[0]
@@ -293,17 +308,20 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
     ax.set_ylabel("avalanche size")
 
     ###Avalanches###
+    subfigs[1,1].set_facecolor('0.95')
     axes_avalanches = subfigs[1,1].subplots(1,2)
 
     ax = axes_avalanches[0]
     ax.plot([])
     ax.set_xlabel(r"step")
     ax.set_ylabel(r"$\epsilon_{av}$")
+    ax.axis('off')
 
     ax = axes_avalanches[1]
     ax.plot([])
     ax.set_xlabel("step")
     ax.set_ylabel("unstable particles")
+    ax.axis('off')
 
     #maximize window
     figManager = plt.get_current_fig_manager()

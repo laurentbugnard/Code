@@ -18,21 +18,22 @@ params = {
     'L': 100,
     'xi': float('inf'),
     'method': 'alpha',
-    'exponent': 0.8,
-    'p': 0.1,
-    'stabCoef': 2
+    'exponent': 0.01,
+    'p': 1,
+    'stabCoef': 1
 }
-nsteps=1000
+nsteps=501
 
-sim_results = full_simulation(params, nsteps, seed=1)
+sim_results, CorrGen_params = full_simulation(params, nsteps, seed=2)
 
 #%% Static version
-show_results(**sim_results)
+show_results(**sim_results, CorrGen_params=CorrGen_params)
+
 
 
 #%% Animated version
 
-anim = show_results(**sim_results, show_animation = True, fps=60, rate = 5)
+anim = show_results(**sim_results, show_animation = True, fps=60, rate = 3)
 
 #%%
 #%% Write to video

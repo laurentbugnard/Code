@@ -16,6 +16,9 @@ from datetime import datetime
 
 def full_simulation(params, nsteps, seed=0, save=True):
     
+    #Prepare CorrGen parameters for the output
+    CorrGen_params = {'xi': params['xi'], 'method': params['method'],
+                        'exponent': params['exponent'], 'p': params['p']}
     #Give a standardized name to the simulation according to conventions
     name = to_str(params) + f'/seed={seed}'
     
@@ -51,7 +54,7 @@ def full_simulation(params, nsteps, seed=0, save=True):
                     
                 del res_dict['date']; del res_dict['totalSteps']
                     
-                return res_dict
+                return res_dict, CorrGen_params
             
             #If the simulation was too short
             else:
@@ -62,7 +65,7 @@ def full_simulation(params, nsteps, seed=0, save=True):
         
         ### Otherwise, do the simulation ###
         cg = CorrGen(L=params['L'], xi=params['xi'])
-        cg.generate_fields(method=params['method'], exponent=params['exponent'])
+        cg.generate_fields(method=params['method'], exponent=params['exponent'], seed=seed)
         cg.generate_sigmaY(p=params['p'])
 
         #Initialize
@@ -80,6 +83,7 @@ def full_simulation(params, nsteps, seed=0, save=True):
         #Evolve
         res_dict = evolution_verbose(system, nsteps)
         
+        
         #then save in file
         if save:
             for k,v in res_dict.items():
@@ -91,6 +95,6 @@ def full_simulation(params, nsteps, seed=0, save=True):
             #Store total number of states since initial state
             f.create_dataset(name + '/totalSteps', data = nsteps)
             
-        return res_dict
+        return res_dict, CorrGen_params
     
 #%%
