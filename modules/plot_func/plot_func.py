@@ -340,7 +340,7 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
         avalanche_size.set_data(np.arange(frame*rate + 1), relax_steps[0:frame*rate + 1])
 
     if(show_animation):
-        plt.close('all')
+        # plt.close('all')
         return FuncAnimation(fig, animate, frames=int(np.floor(len(sigma)/rate)) -1 , interval= int(1/fps*1000))
     
     return fig
