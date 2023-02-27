@@ -82,6 +82,7 @@ def full_simulation(params, nsteps, seed=0, homogeneous=False, save=True, file='
             
 
         #Initialize
+        print('Initializing system...', flush=True)
         system = SystemAthermal(
             *elshelby_propagator(L=params['L']),
             sigmay_mean=sigmay_mean,
@@ -92,6 +93,8 @@ def full_simulation(params, nsteps, seed=0, homogeneous=False, save=True, file='
 
         #Change the system's initial stability
         system.sigma *= params['stabCoef']
+        
+        print('Done', flush=True)
 
         #Evolve
         res_dict = evolution_verbose(system, nsteps)

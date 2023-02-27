@@ -1,4 +1,5 @@
 import numpy as np
+from tqdm import tqdm
 from GooseEPM import SystemAthermal
 
 def evolution(system:SystemAthermal, nstep: int) -> tuple[np.ndarray, np.ndarray]:
@@ -59,8 +60,9 @@ def evolution_verbose(system:SystemAthermal, nsteps: int) -> dict:
     
     failing = np.empty([nsteps])
     
+    print('Evolving system...')
 
-    for i in range(1, nsteps+1):
+    for i in tqdm(range(1, nsteps+1)):
         system.shiftImposedShear()
         relax_steps[i] = system.relaxAthermal()
         
@@ -71,6 +73,8 @@ def evolution_verbose(system:SystemAthermal, nsteps: int) -> dict:
         failing[i-1] = np.argmax(np.abs(system.sigma) - system.sigmay) #TODO do it later instead (after evolution, before plotting --> when computing more things). Here, do only what is strictly necessary to extract. But then we need to extract sigmay at each step (or at least its changes).
         
     gammabar = sigmabar + epspbar
+    
+    print('Done.')
     
     return {'propagator': system.propagator,
             'sigmay_mean': system.sigmay_mean,
