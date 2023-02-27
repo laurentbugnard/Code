@@ -253,7 +253,7 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
     axes_images = subfigs[0,0].subplots(1,2)
     #sigma(x)
     ax = axes_images[0]
-    sigma_image = ax.imshow(sigma[-1], vmin = -1.1, vmax = 1.1)
+    sigma_image = ax.imshow(sigma[-1], vmin = np.min(sigma[-1]), vmax = np.max(sigma[-1]))
     sigma_cbar = subfigs[0,0].colorbar(sigma_image, aspect=10)
     ax.set_title(r'$\sigma(x)$')
     #epsp(x)
