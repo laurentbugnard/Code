@@ -110,9 +110,11 @@ def find_runtime_error(system:SystemAthermal, nstep:int, max_relaxationsteps = 1
     print('No error found')
     return 0
 
-def init_sigma(system, sigma_std=0.1, seed=0):
+def init_sigma(system, sigma_std=0.1, seed=0, relax=True):
     np.random.seed(seed)
     dsig = np.random.normal(0, sigma_std, system.shape)
     dsig_pad = np.pad(dsig,((0,system.shape[0]-1),(0,system.shape[1]-1)), mode='wrap')
     
     system.sigma = fftconvolve(dsig_pad, system.propagator, mode='valid')
+    
+    if relax: system.relaxAthermal()
