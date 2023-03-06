@@ -253,7 +253,7 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
     axes_images = subfigs[0,0].subplots(1,2)
     #sigma(x)
     ax = axes_images[0]
-    sigma_image = ax.imshow(sigma[-1], vmin = np.min(sigma[-1]), vmax = np.max(sigma[-1]))
+    sigma_image = ax.imshow(sigma[-1], vmin = np.min(sigma[-1]), vmax = np.max(sigma))
     sigma_cbar = subfigs[0,0].colorbar(sigma_image, aspect=10)
     ax.set_title(r'$\sigma(x)$')
     #epsp(x)
@@ -313,11 +313,9 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
     axes_avalanches = subfigs[1,1].subplots(1,2)
 
     ax = axes_avalanches[0]
-    ax.plot([])
-    ax.set_xlabel(r"step")
-    ax.set_ylabel(r"$\epsilon_{av}$")
-    ax.axis('off')
-
+    events = ax.imshow((epsp[-1]-epsp[0])!=0, vmin=0, vmax=1)
+    ax.set_title('Events')
+    
     ax = axes_avalanches[1]
     ax.plot([])
     ax.set_xlabel("step")
@@ -338,6 +336,8 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
         stress_strain.set_data(gammabar[0:frame*rate + 1], sigmabar[0:frame*rate + 1])
         axes_plots[1].set_ylim(0, np.max(relax_steps[0:frame*rate + 1]) + 1)
         avalanche_size.set_data(np.arange(frame*rate + 1), relax_steps[0:frame*rate + 1])
+
+        events.set_data((epsp[frame*rate] - epsp[frame*rate-1])!=0)
 
     if(show_animation):
         # plt.close('all')
