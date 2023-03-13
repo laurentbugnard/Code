@@ -14,11 +14,11 @@ from datetime import datetime
 
 #%%
 
-def full_simulation(params, nsteps, seed=0, homogeneous=False, save=True, file='./data/data.hdf5'):
+def full_simulation(params, nsteps, seed=0, save=True, file='./data/data.hdf5'):
     
     #Prepare CorrGen parameters for the output
     CorrGen_params=None
-    if not homogeneous:
+    if params['map_type'] == 'cg':
         CorrGen_params = {'xi': params['xi'], 'method': params['method'],
                             'exponent': params['exponent'], 'p': params['p']}
     
@@ -72,28 +72,28 @@ def full_simulation(params, nsteps, seed=0, homogeneous=False, save=True, file='
         
         ### Otherwise, do the simulation ###
         
-        if homogeneous:
+        if params['map_type'] =='homog':
             sigmay_mean = np.ones((params['L'], params['L']))
-        else:
+        elif params['map_type'] =='cg':
             cg = CorrGen(L=params['L'], xi=params['xi'])
             cg.generate_fields(method=params['method'], exponent=params['exponent'], seed=seed)
             cg.generate_sigmaY(p=params['p'])
             sigmay_mean = cg.sigmaY
+        elif params['map_type'] == 'custom':
+            image = np.load(params['path'])
+            sigmay_mean = params['shift'] + params['scale']*image
             
 
         #Initialize
         print('Initializing system...', flush=True)
         system = SystemAthermal(
-            *elshelby_propagator(L=params['L']),
+            *elshelby_propagator(L=sigmay_mean.shape[0]),
             sigmay_mean=sigmay_mean,
-            sigmay_std=0.0 * np.ones_like(sigmay_mean),
+            sigmay_std=params['sigma_std'] * np.ones_like(sigmay_mean),
             seed=seed,
-            init_random_stress=True
+            init_random_stress=False
         )
-
-        #Change the system's initial stability
-        system.sigma *= params['stabCoef']
-        
+        init_sigma(system, sigma_std=params['stability'], seed=seed)
         print('Done', flush=True)
 
         #Evolve
