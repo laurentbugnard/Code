@@ -216,7 +216,8 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
                  sigma:list[np.ndarray], epsp:list[np.ndarray], 
                  relax_steps:np.ndarray, failing:np.ndarray,
                  CorrGen_params = None,
-                 show_animation = False, rate = 1, fps = 1):
+                 show_animation = False, rate = 1, fps = 1,
+                 cut = False):
     """Visualization function which shows the whole evolution of the EPM. 
     Top-left pannel: Evolution of stress and plastic strain fields.
     Bottom-left pannel: Evolution of stress-strain curve and avalanche sizes.
@@ -238,27 +239,31 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
         Defaults to False.
         rate (int, optional): Number of data points per frame for the animation. Defaults to 1.
         fps (int, optional): Frames per second for the animation. Defaults to 1.
+        cut (bool, optional): If True, only the evolution until the largest avalanche is shown.
 
     Returns:
         Either just a figure of the final results or an animation object (matplotlib.animation.FuncAnimation),
         depending on ``show_animation``.
     """
     
+    if cut: last = np.argmax(relax_steps)
+    else: last = -1
+    
     fig = plt.figure(constrained_layout=True)
     subfigs = fig.subfigures(2,2,wspace=0, hspace=0, width_ratios=[2,1])
     plt.subplots_adjust(wspace=0.4, bottom=0.15)
-
+    
     ###Images###
     subfigs[0,0].set_facecolor('0.95')
     axes_images = subfigs[0,0].subplots(1,2)
     #sigma(x)
     ax = axes_images[0]
-    sigma_image = ax.imshow(sigma[-1], vmin = np.min(sigma[-1]), vmax = np.max(sigma))
+    sigma_image = ax.imshow(sigma[last], vmin = np.min(sigma), vmax = np.max(sigma))
     sigma_cbar = subfigs[0,0].colorbar(sigma_image, aspect=10)
     ax.set_title(r'$\sigma(x)$')
     #epsp(x)
     ax = axes_images[1]
-    epsp_image = ax.imshow(epsp[-1], vmin = 0, vmax = np.max(epsp[-1]))
+    epsp_image = ax.imshow(epsp[last], vmin = 0, vmax = np.max(epsp[last]))
     epsp_cbar = subfigs[0,0].colorbar(epsp_image, aspect=10)
     ax.set_title(r'$\epsilon_p(x)$')
 
@@ -299,12 +304,12 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
     axes_plots = subfigs[1,0].subplots(1,2)
 
     ax = axes_plots[0]
-    stress_strain = ax.plot(gammabar, sigmabar)[0]
+    stress_strain = ax.plot(gammabar[0:last], sigmabar[0:last])[0]
     ax.set_xlabel(r"$\epsilon$")
     ax.set_ylabel(r"$\sigma$")
 
     ax = axes_plots[1]
-    avalanche_size = ax.plot(relax_steps)[0]
+    avalanche_size = ax.plot(relax_steps[0:last])[0]
     ax.set_xlabel("step")
     ax.set_ylabel("avalanche size")
 
@@ -313,14 +318,13 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
     axes_avalanches = subfigs[1,1].subplots(1,2)
 
     ax = axes_avalanches[0]
-    events = ax.imshow((epsp[-1]-epsp[0])!=0, vmin=0, vmax=1)
+    events = ax.imshow((epsp[last]-epsp[0])!=0, vmin=0, vmax=1)
     ax.set_title('Events')
     
     ax = axes_avalanches[1]
-    ax.plot([])
-    ax.set_xlabel("step")
-    ax.set_ylabel("unstable particles")
-    ax.axis('off')
+    statistics = sns.histplot(ax=ax, data=relax_steps[1:last], kde=True, log_scale=(True,True))
+    statistics.set_ylabel('count', fontsize=12)
+    ax.set_title('Avalanche statistics', fontsize=15)
 
     #maximize window
     figManager = plt.get_current_fig_manager()
@@ -338,7 +342,13 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
         avalanche_size.set_data(np.arange(frame*rate + 1), relax_steps[0:frame*rate + 1])
 
         events.set_data((epsp[frame*rate] - epsp[frame*rate-1])!=0)
-
+        
+        axes_avalanches[1].cla() #clear axis
+        axes_avalanches[1].set_xlim(1,np.max(relax_steps))
+        axes_avalanches[1].set_ylim(1,500)
+        statistics = sns.histplot(ax=axes_avalanches[1], 
+                                  data=relax_steps[1:frame], kde=False, log_scale=(True,True))
+        #TODO: check why animation of statistics not working
     if(show_animation):
         # plt.close('all')
         return FuncAnimation(fig, animate, frames=int(np.floor(len(sigma)/rate)) -1 , interval= int(1/fps*1000))
