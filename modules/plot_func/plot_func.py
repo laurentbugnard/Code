@@ -7,6 +7,8 @@ plt.style.use('./modules/config/style.mplstyle')
 from matplotlib.animation import FuncAnimation
 from sklearn.linear_model import LinearRegression
 import seaborn as sns
+from matplotlib.widgets import TextBox, Button
+
 
 #############IMSHOW CONFIGURATION#################
 
@@ -250,6 +252,9 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
         def __init__(self, data_size = float('inf')):
             self.index = 0 #initialize index
             self.data_size = data_size
+            
+        def set_index(self, index):
+            self.index = index
 
         def on_scroll(self, event):
             # print(event.button, event.step)
@@ -326,7 +331,7 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
     ax.set_title(r'$\sigma(x)$')
     #epsp(x)
     ax = axes_images[1]
-    epsp_image = ax.imshow(epsp[last], vmin = 0, vmax = np.max(epsp[last]))
+    epsp_image = ax.imshow(epsp[last], vmin = np.min(epsp[last]), vmax = np.max(epsp[last]))
     epsp_cbar = subfigs[0,0].colorbar(epsp_image, aspect=10)
     ax.set_title(r'$\epsilon_p(x)$')
 
@@ -403,6 +408,45 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
     tracker = IndexTracker(len(sigma))
     fig.canvas.mpl_connect('key_press_event', tracker.on_press) 
     fig.canvas.mpl_connect('scroll_event', tracker.on_scroll)
+    
+    #add textbox to navigate
+    def submit(index):
+        try:
+            index = int(index)
+            tracker.set_index(index)
+            update_all_axes(np.clip(int(index), 0, len(sigma)))
+        except:
+            pass
+        text_box.set_val('')
+    
+    boxsize = (0.04, 0.06)
+    axbox = subfigs[0,0].add_axes([0, 1-boxsize[1], *boxsize])
+    global text_box
+    text_box = TextBox(axbox, 'step')
+    text_box.on_submit(submit)
+    
+    #add button to change scale
+    
+    def scale_dynamic(event):
+        sigma_image.set_clim(vmin=np.min(sigma[tracker.index]), vmax=np.max(sigma[tracker.index]))
+        epsp_image.set_clim(vmin=np.min(epsp[tracker.index]), vmax=np.max(epsp[tracker.index]))
+        fig.canvas.draw()
+        
+    def scale_last(event):
+        sigma_image.set_clim(vmin=np.min(sigma[last]), vmax=np.max(sigma[last]))
+        epsp_image.set_clim(vmin=np.min(epsp[last]), vmax=np.max(epsp[last]))
+    
+    buttonsize = (boxsize[0]*2, boxsize[1])
+    
+    axbutton_dynamic = subfigs[0,0].add_axes([0, 1-2*buttonsize[1], *buttonsize])
+    global button_dynamic
+    button_dynamic = Button(axbutton_dynamic, 'scale: dynamic')
+    button_dynamic.on_clicked(scale_dynamic)
+    
+    axbutton_last = subfigs[0,0].add_axes([0, 1-3*buttonsize[1], *buttonsize])
+    global button_last
+    button_last = Button(axbutton_last, 'scale: last')
+    button_last.on_clicked(scale_last)
     
     return fig
 
