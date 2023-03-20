@@ -255,8 +255,8 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
             # print(event.button, event.step)
             
             #update index
-            if event.button == 'down': increment = int(2**(event.step-1))  
-            else: increment = - int(2**(-event.step-1))
+            if event.button == 'up': increment = - int(2**(event.step-1))  
+            else: increment = int(2**(-event.step-1))
             self.update_index(increment)
             
             #update figure
