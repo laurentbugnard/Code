@@ -252,21 +252,24 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
             self.data_size = data_size
 
         def on_scroll(self, event):
-            print(event.button, event.step)
+            # print(event.button, event.step)
             
             #update index
-            increment = 1 if event.button == 'up' else -1
+            if event.button == 'down': increment = int(2**(event.step-1))  
+            else: increment = - int(2**(-event.step-1))
             self.update_index(increment)
             
             #update figure
             update_all_axes(self.index)
         
         def on_press(self, event):
-            print('press', event.key, flush=True)
+            # print('press', event.key, flush=True)
             
             #update index
             if event.key == 'left': increment = -1
+            elif event.key == 'shift+left': increment = -15
             elif event.key == 'right': increment = 1
+            elif event.key == 'shift+right': increment = 15
             else: increment = 0
             self.update_index(increment, clip=False)
             
@@ -295,11 +298,11 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
 
         events.set_data((epsp[index] - epsp[index-1])!=0)
         
-        axes_avalanches[1].cla() #clear axis
-        axes_avalanches[1].set_xlim(1,np.max(relax_steps))
-        axes_avalanches[1].set_ylim(1,500)
-        statistics = sns.histplot(ax=axes_avalanches[1], 
-                                  data=relax_steps[1:index], kde=False, log_scale=(True,True))
+        # axes_avalanches[1].cla() #clear axis
+        # axes_avalanches[1].set_xlim(1,np.max(relax_steps))
+        # axes_avalanches[1].set_ylim(1,500)
+        # statistics = sns.histplot(ax=axes_avalanches[1], 
+                                #   data=relax_steps[1:index], kde=False, log_scale=(True,True))
         #TODO: check why update of statistics not working
         
         fig.canvas.draw()
@@ -352,8 +355,8 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
     ax.set_title(r'$G(x)$', fontsize=15)
     #Initial stability distribution
     ax = axes_parameters[1,0]
-    stability = sns.histplot(ax=ax, data=sigma[0].ravel(), kde=True)
-    stability.set_ylabel('count', fontsize=12)
+    # stability = sns.histplot(ax=ax, data=sigma[0].ravel(), kde=True)
+    # stability.set_ylabel('count', fontsize=12)
     ax.set_title(r'$\sigma(x, t=0)$ distribution', fontsize=15)
     ax.set_xlim(-1,1)
     #
@@ -382,8 +385,8 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
     ax.set_title('Events')
     
     ax = axes_avalanches[1]
-    statistics = sns.histplot(ax=ax, data=relax_steps[1:last], kde=True, log_scale=(True,True))
-    statistics.set_ylabel('count', fontsize=12)
+    # statistics = sns.histplot(ax=ax, data=relax_steps[1:last], kde=True, log_scale=(True,True))
+    # statistics.set_ylabel('count', fontsize=12)
     ax.set_title('Avalanche statistics', fontsize=15)
 
     #maximize window
