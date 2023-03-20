@@ -232,7 +232,7 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
         gammabar (np.ndarray):Unpacked from ``evolution_verbose``.
         sigma (list[np.ndarray]): Unpacked from ``evolution_verbose``.
         epsp (list[np.ndarray]): Unpacked from ``evolution_verbose``.
-        relax_steps (np.ndarUnpacked from ``evolution_verbose``.
+        relax_steps (np.ndarray): Unpacked from ``evolution_verbose``.
         failing (np.ndarray): Unpacked from ``evolution_verbose``.
         CorrGen_params (dict, optional): Added in ``full_simulation``. Defaults to None.
         show_animation (bool, optional): Determines whether an animation or just the final result should be returned. 
