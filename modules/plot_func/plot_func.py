@@ -245,6 +245,66 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
         Either just a figure of the final results or an animation object (matplotlib.animation.FuncAnimation),
         depending on ``show_animation``.
     """
+    ########################### Local functions and classes for animation ###################
+    class IndexTracker:
+        def __init__(self, data_size = float('inf')):
+            self.index = 0 #initialize index
+            self.data_size = data_size
+
+        def on_scroll(self, event):
+            print(event.button, event.step)
+            
+            #update index
+            increment = 1 if event.button == 'up' else -1
+            self.update_index(increment)
+            
+            #update figure
+            update_all_axes(self.index)
+        
+        def on_press(self, event):
+            print('press', event.key, flush=True)
+            
+            #update index
+            if event.key == 'left': increment = -1
+            elif event.key == 'right': increment = 1
+            else: increment = 0
+            self.update_index(increment, clip=False)
+            
+            #update figure
+            update_all_axes(self.index)
+        
+            
+        def update_index(self, increment, clip=True):
+            if clip:
+                self.index = np.clip(self.index + increment, 0, self.data_size -1) #stop at extreme i values
+            else:
+                self.index += increment
+                self.index = self.index % self.data_size
+
+    def animate(frame):
+        update_all_axes(index=frame*rate)
+    
+    def update_all_axes(index):
+        sigma_image.set_data(sigma[index])
+        epsp_image.set_data(epsp[index])
+    
+        axes_plots[0].set_xlim(gammabar[0], gammabar[index + 1])
+        stress_strain.set_data(gammabar[0:index + 1], sigmabar[0:index + 1])
+        axes_plots[1].set_ylim(0, np.max(relax_steps[0:index + 1]) + 1)
+        avalanche_size.set_data(np.arange(index + 1), relax_steps[0:index + 1])
+
+        events.set_data((epsp[index] - epsp[index-1])!=0)
+        
+        axes_avalanches[1].cla() #clear axis
+        axes_avalanches[1].set_xlim(1,np.max(relax_steps))
+        axes_avalanches[1].set_ylim(1,500)
+        statistics = sns.histplot(ax=axes_avalanches[1], 
+                                  data=relax_steps[1:index], kde=False, log_scale=(True,True))
+        #TODO: check why update of statistics not working
+        
+        fig.canvas.draw()
+    
+    ############################### END OF LOCAL FUNCTIONS ######################################
     
     if cut: last = np.argmax(relax_steps)
     else: last = -1
@@ -330,28 +390,16 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
     figManager = plt.get_current_fig_manager()
     figManager.window.showMaximized()
 
-
-
-    def animate(frame):
-        sigma_image.set_data(sigma[frame*rate])
-        epsp_image.set_data(epsp[frame*rate])
-    
-        axes_plots[0].set_xlim(gammabar[0], gammabar[frame*rate + 1])
-        stress_strain.set_data(gammabar[0:frame*rate + 1], sigmabar[0:frame*rate + 1])
-        axes_plots[1].set_ylim(0, np.max(relax_steps[0:frame*rate + 1]) + 1)
-        avalanche_size.set_data(np.arange(frame*rate + 1), relax_steps[0:frame*rate + 1])
-
-        events.set_data((epsp[frame*rate] - epsp[frame*rate-1])!=0)
-        
-        axes_avalanches[1].cla() #clear axis
-        axes_avalanches[1].set_xlim(1,np.max(relax_steps))
-        axes_avalanches[1].set_ylim(1,500)
-        statistics = sns.histplot(ax=axes_avalanches[1], 
-                                  data=relax_steps[1:frame], kde=False, log_scale=(True,True))
-        #TODO: check why animation of statistics not working
     if(show_animation):
         # plt.close('all')
         return FuncAnimation(fig, animate, frames=int(np.floor(len(sigma)/rate)) -1 , interval= int(1/fps*1000))
+
+    
+    #connect figure to keyboard and use a tracker for the index
+    global tracker #trick: make tracker global so it exists outside show_results and the connection remains
+    tracker = IndexTracker(len(sigma))
+    fig.canvas.mpl_connect('key_press_event', tracker.on_press) 
+    fig.canvas.mpl_connect('scroll_event', tracker.on_scroll)
     
     return fig
 
