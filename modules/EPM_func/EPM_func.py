@@ -41,6 +41,7 @@ def evolution_verbose(system:SystemAthermal, nsteps: int) -> dict:
         sigmay_mean (np.ndarray): Mean yield stress field.
         sigmabar (np.ndarray): List of mean stress.
         epspbar (np.ndarray): List of mean plastic strain.
+        sigmay (list): List of yield stress fields.
         sigma (list): List of stress maps.
         epsp (list): List of plastic strain maps.
         relax_steps (np.ndarray): Number of relaxation steps for each avalanche.
@@ -51,6 +52,8 @@ def evolution_verbose(system:SystemAthermal, nsteps: int) -> dict:
     
     epspbar = np.empty([nsteps + 1])  # average plastic strain
     epspbar[0] = np.mean(system.epsp)
+    
+    sigmay = [system.sigmay.copy()]
     
     sigma = [system.sigma.copy()]
     
@@ -69,6 +72,7 @@ def evolution_verbose(system:SystemAthermal, nsteps: int) -> dict:
         
         sigmabar[i] = system.sigmabar
         epspbar[i] = np.mean(system.epsp)
+        sigmay.append(system.sigmay.copy())
         sigma.append(system.sigma.copy())
         epsp.append(system.epsp.copy())
         failing[i-1] = np.argmax(np.abs(system.sigma) - system.sigmay) #TODO do it later instead (after evolution, before plotting --> when computing more things). Here, do only what is strictly necessary to extract. But then we need to extract sigmay at each step (or at least its changes).
@@ -82,6 +86,7 @@ def evolution_verbose(system:SystemAthermal, nsteps: int) -> dict:
             'sigmabar': sigmabar,
             'epspbar': epspbar,
             'gammabar': gammabar,
+            'sigmay': sigmay,
             'sigma': sigma,
             'epsp': epsp,
             'relax_steps': relax_steps,
