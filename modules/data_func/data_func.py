@@ -17,7 +17,7 @@ def to_dict(param_str:str) -> dict:
     #Initialize output dictionary
     res_dict = {}
     #Parse string into a list
-    str_list = param_str.split('_')
+    str_list = param_str.replace('\\','/').replace('*','.').split('___')
     
     for string in str_list:
         #Try to extract name and value
@@ -56,14 +56,16 @@ def to_str(param_dict:dict) -> str:
         str: The output string.
     """
         
+    assert(not('___' in ''.join(param_dict.keys()))), "'___' not allowed in parameter names."
+    
     #Initialize output string
     str_list = []
     #Create individual parameter strings in alphabetical order
     for key in sorted(param_dict):
-        str_list.append(key + '=' + str((param_dict[key])))
+        str_list.append(key + '=' + str((param_dict[key])).replace('/','\\').replace('.','*'))
 
     #Join individual parameter strings
-    return '_'.join(str_list)
+    return '___'.join(str_list)
     
 
 def summary_df(file:type[h5py.File]) -> type[pd.DataFrame]:
