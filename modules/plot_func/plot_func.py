@@ -6,8 +6,10 @@ from scipy.optimize import curve_fit
 plt.style.use('./modules/config/style.mplstyle')
 from matplotlib.animation import FuncAnimation
 from sklearn.linear_model import LinearRegression
-import seaborn as sns
 from matplotlib.widgets import TextBox, Button
+from tqdm import tqdm
+from linetimer import linetimer
+from fastkde.fastKDE import pdf as pdf_kde
 
 
 #############IMSHOW CONFIGURATION#################
@@ -215,7 +217,7 @@ def cplot2(ax:plt.Axes, x:np.ndarray, f:np.ndarray, method = 'real-imag', lognor
 
 def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray, 
                  sigmabar:np.ndarray, epspbar:np.ndarray, gammabar:np.ndarray, 
-                 sigma:list[np.ndarray], epsp:list[np.ndarray], 
+                 sigmay:list[np.ndarray], sigma:list[np.ndarray], epsp:list[np.ndarray], 
                  relax_steps:np.ndarray, failing:np.ndarray,
                  CorrGen_params = None,
                  show_animation = False, rate = 1, fps = 1,
@@ -247,14 +249,50 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
         Either just a figure of the final results or an animation object (matplotlib.animation.FuncAnimation),
         depending on ``show_animation``.
     """
+    
+    #Preprocessing: prepare histograms
+    
+    #STABILITY HISTOGRAM
+    #prepare bins
+    stability_bins_edges = np.linspace(0,2*np.max(sigmay_mean),20)
+    stability_bins_edges_width = stability_bins_edges[1]-stability_bins_edges[0]
+    #make a list of histograms (one for each step)
+    stability_hist_list = []
+    stability_kde_list = []
+    print("Precompute stability histograms and KDE...")
+    for index in tqdm(range(len(sigma))):
+        x = sigmay[index] - sigma[index] #stability
+        n, _ = np.histogram(x, stability_bins_edges, density = True)
+        kde = pdf_kde(x.ravel())
+        stability_hist_list.append(n)
+        stability_kde_list.append(kde)
+    
+    
+    #AVALANCHE SIZE HISTOGRAM
+    #prepare bins
+    max_exponent = int(np.log10(np.max(relax_steps)))
+    scales = np.logspace(0,max_exponent,max_exponent+1).astype('int')
+    relax_steps_bins_edges = (np.array([1,2,5]) * scales.reshape(-1,1)).ravel() #broadcasting
+    relax_steps_bins_edges = np.r_[relax_steps_bins_edges, 10*scales[-1]]
+    #make a list of histograms (one for each step)
+    relax_steps_hist_list = []
+    print("Precompute avalanche histograms...")
+    for index in tqdm(range(relax_steps.size)):
+        n, _ = np.histogram(relax_steps[1:index+1], relax_steps_bins_edges)
+        relax_steps_hist_list.append(n)
+    
+    
+    
     ########################### Local functions and classes for animation ###################
     class IndexTracker:
         def __init__(self, data_size = float('inf')):
             self.index = 0 #initialize index
+            # print('Index = ', self.index)
             self.data_size = data_size
             
         def set_index(self, index):
             self.index = index
+            # print('Index = ', self.index)
 
         def on_scroll(self, event):
             # print(event.button, event.step)
@@ -275,12 +313,16 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
             elif event.key == 'shift+left': increment = -15
             elif event.key == 'right': increment = 1
             elif event.key == 'shift+right': increment = 15
-            else: increment = 0
+            else: return
+            
             self.update_index(increment, clip=False)
             
             #update figure
             update_all_axes(self.index)
-        
+            
+        def on_mouse_click(self, event):
+            self.set_index(int(event.xdata))
+            update_all_axes(self.index)
             
         def update_index(self, increment, clip=True):
             if clip:
@@ -288,27 +330,34 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
             else:
                 self.index += increment
                 self.index = self.index % self.data_size
+            
+            # print('Index = ', self.index)
+            
 
     def animate(frame):
         update_all_axes(index=frame*rate)
     
+    @linetimer(unit='s')
     def update_all_axes(index):
         sigma_image.set_data(sigma[index])
         epsp_image.set_data(epsp[index])
     
-        axes_plots[0].set_xlim(gammabar[0], gammabar[index + 1])
+        axes_plots[0].set_xlim(gammabar[0], gammabar[index]+0.01) #0.01 to avoid xlim = [0,0]
         stress_strain.set_data(gammabar[0:index + 1], sigmabar[0:index + 1])
         axes_plots[1].set_ylim(0, np.max(relax_steps[0:index + 1]) + 1)
         avalanche_size.set_data(np.arange(index + 1), relax_steps[0:index + 1])
 
         events.set_data((epsp[index] - epsp[index-1])!=0)
         
-        # axes_avalanches[1].cla() #clear axis
-        # axes_avalanches[1].set_xlim(1,np.max(relax_steps))
-        # axes_avalanches[1].set_ylim(1,500)
-        # statistics = sns.histplot(ax=axes_avalanches[1], 
-                                #   data=relax_steps[1:index], kde=False, log_scale=(True,True))
-        #TODO: check why update of statistics not working
+        for count, rect in zip(stability_hist_list[index],
+                               stability_bar_containers.patches):
+            rect.set_height(count)
+            
+        stability_kde.set_data(stability_kde_list[index][1],stability_kde_list[index][0])
+        
+        for count, rect in zip(relax_steps_hist_list[index],
+                               relax_steps_bar_containers.patches):
+            rect.set_height(count)
         
         fig.canvas.draw()
     
@@ -319,7 +368,7 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
     
     fig = plt.figure(constrained_layout=True)
     subfigs = fig.subfigures(2,2,wspace=0, hspace=0, width_ratios=[2,1])
-    plt.subplots_adjust(wspace=0.4, bottom=0.15)
+    # plt.subplots_adjust(wspace=0.4, bottom=0.15)
     
     ###Images###
     subfigs[0,0].set_facecolor('0.95')
@@ -358,12 +407,14 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
     ax.set_yticks([])
     propagator_cbar = subfigs[0,1].colorbar(propagator_image, aspect = 5)
     ax.set_title(r'$G(x)$', fontsize=15)
-    #Initial stability distribution
+    #Stability distribution
     ax = axes_parameters[1,0]
-    # stability = sns.histplot(ax=ax, data=sigma[0].ravel(), kde=True)
-    # stability.set_ylabel('count', fontsize=12)
-    ax.set_title(r'$\sigma(x, t=0)$ distribution', fontsize=15)
-    ax.set_xlim(-1,1)
+    _, _, stability_bar_containers = ax.hist((sigmay[last] - sigma[last]).ravel(), bins=stability_bins_edges,
+                                              ec="black", alpha=0.5, density = True)
+    stability_kde = ax.plot(stability_kde_list[last][1], stability_kde_list[last][0])[0]
+    ax.set_title(r'$P(\sigma)$', fontsize=15)
+    ax.set_xlim(stability_bins_edges[0],stability_bins_edges[-1])
+    ax.set_ylim(0, 1/stability_bins_edges_width)
     #
     axes_parameters[1,1].axis('off')
 
@@ -390,8 +441,11 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
     ax.set_title('Events')
     
     ax = axes_avalanches[1]
-    # statistics = sns.histplot(ax=ax, data=relax_steps[1:last], kde=True, log_scale=(True,True))
-    # statistics.set_ylabel('count', fontsize=12)
+    _, _, relax_steps_bar_containers = ax.hist(relax_steps[1:last], bins=relax_steps_bins_edges,
+                                              ec="black", alpha=0.5)
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    ax.set_ylabel('count', fontsize=12)
     ax.set_title('Avalanche statistics', fontsize=15)
 
     #maximize window
@@ -408,6 +462,7 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
     tracker = IndexTracker(len(sigma))
     fig.canvas.mpl_connect('key_press_event', tracker.on_press) 
     fig.canvas.mpl_connect('scroll_event', tracker.on_scroll)
+    fig.canvas.mpl_connect('button_press_event', tracker.on_mouse_click)
     
     #add textbox to navigate
     def submit(index):
