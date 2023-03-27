@@ -219,6 +219,7 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
                  sigmabar:np.ndarray, epspbar:np.ndarray, gammabar:np.ndarray, 
                  sigmay:list[np.ndarray], sigma:list[np.ndarray], epsp:list[np.ndarray], 
                  relax_steps:np.ndarray, failing:np.ndarray,
+                 mask = None,
                  CorrGen_params = None,
                  show_animation = False, rate = 1, fps = 1,
                  cut = False):
@@ -238,6 +239,7 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
         epsp (list[np.ndarray]): Unpacked from ``evolution_verbose``.
         relax_steps (np.ndarray): Unpacked from ``evolution_verbose``.
         failing (np.ndarray): Unpacked from ``evolution_verbose``.
+        mask (np.ndarray, optional): Mask for stability distribution. Defaults to None.
         CorrGen_params (dict, optional): Added in ``full_simulation``. Defaults to None.
         show_animation (bool, optional): Determines whether an animation or just the final result should be returned. 
         Defaults to False.
@@ -261,7 +263,11 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
     stability_kde_list = []
     print("Precompute stability histograms and KDE...")
     for index in tqdm(range(len(sigma))):
-        x = sigmay[index] - sigma[index] #stability
+        #x = stability
+        if mask is None: x = sigmay[index] - sigma[index]
+        else:
+            x = sigmay[index][mask.astype('bool')] - sigma[index][mask.astype('bool')]
+
         n, _ = np.histogram(x, stability_bins_edges, density = True)
         kde = pdf_kde(x.ravel())
         stability_hist_list.append(n)
@@ -337,7 +343,7 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
     def animate(frame):
         update_all_axes(index=frame*rate)
     
-    @linetimer(unit='s')
+    # @linetimer(unit='s')
     def update_all_axes(index):
         sigma_image.set_data(sigma[index])
         epsp_image.set_data(epsp[index])
@@ -409,10 +415,14 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
     ax.set_title(r'$G(x)$', fontsize=15)
     #Stability distribution
     ax = axes_parameters[1,0]
-    _, _, stability_bar_containers = ax.hist((sigmay[last] - sigma[last]).ravel(), bins=stability_bins_edges,
+    
+    _, _, stability_bar_containers = ax.hist([], bins=stability_bins_edges,
                                               ec="black", alpha=0.5, density = True)
+    for count, rect in zip(stability_hist_list[last], stability_bar_containers):
+        rect.set_height(count)
+        
     stability_kde = ax.plot(stability_kde_list[last][1], stability_kde_list[last][0])[0]
-    ax.set_title(r'$P(\sigma)$', fontsize=15)
+    ax.set_title(r'$P(x)$', fontsize=15)
     ax.set_xlim(stability_bins_edges[0],stability_bins_edges[-1])
     ax.set_ylim(0, 1/stability_bins_edges_width)
     #
