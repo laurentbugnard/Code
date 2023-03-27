@@ -135,10 +135,10 @@ def precompute(res_dict, mask=None):
     sigmay = res_dict['sigmay']
     #prepare bins
     stability_bins_edges = np.linspace(0,2*np.max(res_dict['sigmay_mean']),20)
-    stability_bins_edges_width = stability_bins_edges[1]-stability_bins_edges[0]
     #make a list of histograms (one for each step)
     stability_hist_list = []
-    stability_kde_list = []
+    stability_kde_x_list = []
+    stability_kde_y_list = []
     print("Precompute stability histograms and KDE...")
     for index in tqdm(range(len(sigma))):
         #x = stability
@@ -146,10 +146,11 @@ def precompute(res_dict, mask=None):
         else:
             x = sigmay[index][mask.astype('bool')] - sigma[index][mask.astype('bool')]
 
-        hist = np.histogram(x, stability_bins_edges, density = True)
-        kde = pdf_kde(x.ravel())
-        stability_hist_list.append(hist)
-        stability_kde_list.append(kde)
+        n, _ = np.histogram(x, stability_bins_edges, density = True)
+        kde_y, kde_x = pdf_kde(x.ravel(), numPoints=257)
+        stability_hist_list.append(n)
+        stability_kde_x_list.append(kde_x.astype('float64'))
+        stability_kde_y_list.append(kde_y.astype('float64'))
     
     
     #AVALANCHE SIZE HISTOGRAM
@@ -163,11 +164,14 @@ def precompute(res_dict, mask=None):
     relax_steps_hist_list = []
     print("Precompute avalanche histograms...")
     for index in tqdm(range(relax_steps.size)):
-        hist = np.histogram(relax_steps[1:index+1], relax_steps_bins_edges)
-        relax_steps_hist_list.append(hist)
+        n, _ = np.histogram(relax_steps[1:index+1], relax_steps_bins_edges)
+        relax_steps_hist_list.append(n)
         
     res_dict.update({'stability_hist_list':stability_hist_list, 
-                     'stability_kde_list':stability_kde_list, 
-                     'relax_steps_hist_list':relax_steps_hist_list})
+                     'stability_kde_x_list':stability_kde_x_list, 
+                     'stability_kde_y_list':stability_kde_y_list, 
+                     'relax_steps_hist_list':relax_steps_hist_list,
+                     'stability_bins_edges':stability_bins_edges,
+                     'relax_steps_bins_edges':relax_steps_bins_edges,})
 
     return res_dict

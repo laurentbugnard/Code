@@ -14,7 +14,7 @@ from datetime import datetime
 
 #%%
 
-def full_simulation(params, nsteps, seed=0, save=True, file='./data/data.hdf5'):
+def full_simulation(params, nsteps, seed=0, save=True, file='./data/data.hdf5', mask=None):
     
     #Prepare CorrGen parameters for the output
     CorrGen_params=None
@@ -98,6 +98,9 @@ def full_simulation(params, nsteps, seed=0, save=True, file='./data/data.hdf5'):
 
         #Evolve
         res_dict = evolution_verbose(system, nsteps)
+        
+        #Precompute histograms and KDE's
+        res_dict = precompute(res_dict, mask=mask)
         
         
         #then save in file
