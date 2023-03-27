@@ -2,6 +2,8 @@ import numpy as np
 from tqdm import tqdm
 from GooseEPM import SystemAthermal
 from scipy.signal import fftconvolve
+from fastkde.fastKDE import pdf as pdf_kde
+
 
 def evolution(system:SystemAthermal, nstep: int) -> tuple[np.ndarray, np.ndarray]:
     """_summary_
@@ -123,3 +125,49 @@ def init_sigma(system, sigma_std=0.1, seed=0, relax=True):
     system.sigma = fftconvolve(dsig_pad, system.propagator, mode='valid')
     
     if relax: system.relaxAthermal()
+    
+    
+    
+def precompute(res_dict, mask=None):
+    #Preprocessing: prepare histograms
+    #STABILITY HISTOGRAM
+    sigma = res_dict['sigma']
+    sigmay = res_dict['sigmay']
+    #prepare bins
+    stability_bins_edges = np.linspace(0,2*np.max(res_dict['sigmay_mean']),20)
+    stability_bins_edges_width = stability_bins_edges[1]-stability_bins_edges[0]
+    #make a list of histograms (one for each step)
+    stability_hist_list = []
+    stability_kde_list = []
+    print("Precompute stability histograms and KDE...")
+    for index in tqdm(range(len(sigma))):
+        #x = stability
+        if mask == None: x = sigmay[index] - sigma[index]
+        else:
+            x = sigmay[index][mask.astype('bool')] - sigma[index][mask.astype('bool')]
+
+        hist = np.histogram(x, stability_bins_edges, density = True)
+        kde = pdf_kde(x.ravel())
+        stability_hist_list.append(hist)
+        stability_kde_list.append(kde)
+    
+    
+    #AVALANCHE SIZE HISTOGRAM
+    relax_steps = res_dict['relax_steps']
+    #prepare bins
+    max_exponent = int(np.log10(np.max(relax_steps)))
+    scales = np.logspace(0,max_exponent,max_exponent+1).astype('int')
+    relax_steps_bins_edges = (np.array([1,2,5]) * scales.reshape(-1,1)).ravel() #broadcasting
+    relax_steps_bins_edges = np.r_[relax_steps_bins_edges, 10*scales[-1]]
+    #make a list of histograms (one for each step)
+    relax_steps_hist_list = []
+    print("Precompute avalanche histograms...")
+    for index in tqdm(range(relax_steps.size)):
+        hist = np.histogram(relax_steps[1:index+1], relax_steps_bins_edges)
+        relax_steps_hist_list.append(hist)
+        
+    res_dict.update({'stability_hist_list':stability_hist_list, 
+                     'stability_kde_list':stability_kde_list, 
+                     'relax_steps_hist_list':relax_steps_hist_list})
+
+    return res_dict
