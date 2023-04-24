@@ -89,11 +89,11 @@ def full_simulation(params, nsteps, seed=0, save=True, file='./data/data.hdf5', 
         system = SystemAthermal(
             *elshelby_propagator(L=sigmay_mean.shape[0]),
             sigmay_mean=sigmay_mean,
-            sigmay_std=params['sigma_std'] * np.ones_like(sigmay_mean),
+            sigmay_std=params['sigmay_std'] * np.ones_like(sigmay_mean),
             seed=seed,
             init_random_stress=False
         )
-        init_sigma(system, sigma_std=params['stability'], seed=seed)
+        init_sigma(system, sigma_std=params['sigma_std'], seed=seed)
         print('Done', flush=True)
 
         #Evolve
