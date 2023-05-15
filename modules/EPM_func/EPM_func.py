@@ -46,6 +46,7 @@ def evolution_verbose(system:SystemAthermal, nsteps: int) -> dict:
         sigmay (list): List of yield stress fields.
         sigma (list): List of stress maps.
         epsp (list): List of plastic strain maps.
+        shift (np.ndarray): List of shifts before relaxation.
         relax_steps (np.ndarray): Number of relaxation steps for each avalanche.
         failing (np.ndarray): List of failing indexes.
     """
@@ -61,6 +62,9 @@ def evolution_verbose(system:SystemAthermal, nsteps: int) -> dict:
     
     epsp = [system.epsp.copy()]
     
+    shift = np.empty([nsteps + 1])
+    shift[-1] = 0
+    
     relax_steps = np.empty([nsteps + 1])
     relax_steps[0] = 0
     
@@ -69,7 +73,7 @@ def evolution_verbose(system:SystemAthermal, nsteps: int) -> dict:
     print('Evolving system...')
 
     for i in tqdm(range(1, nsteps+1)):
-        system.shiftImposedShear()
+        shift[i-1] = system.shiftImposedShear()
         relax_steps[i] = system.relaxAthermal()
         
         sigmabar[i] = system.sigmabar
@@ -91,6 +95,7 @@ def evolution_verbose(system:SystemAthermal, nsteps: int) -> dict:
             'sigmay': sigmay,
             'sigma': sigma,
             'epsp': epsp,
+            'shift': shift,
             'relax_steps': relax_steps,
             'failing': failing}
         

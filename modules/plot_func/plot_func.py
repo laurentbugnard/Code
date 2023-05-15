@@ -217,7 +217,7 @@ def cplot2(ax:plt.Axes, x:np.ndarray, f:np.ndarray, method = 'real-imag', lognor
 def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray, 
                  sigmabar:np.ndarray, epspbar:np.ndarray, gammabar:np.ndarray, 
                  sigmay:list[np.ndarray], sigma:list[np.ndarray], epsp:list[np.ndarray], 
-                 relax_steps:np.ndarray, failing:np.ndarray,
+                 relax_steps:np.ndarray, shift:np.ndarray, failing:np.ndarray,
                  stability_hist_list:np.ndarray, stability_kde_x_list:np.ndarray, stability_kde_y_list:np.ndarray,
                  relax_steps_hist_list:np.ndarray,
                  stability_bins_edges:np.ndarray,
@@ -241,6 +241,7 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
         sigma (list[np.ndarray]): Unpacked from ``evolution_verbose``.
         epsp (list[np.ndarray]): Unpacked from ``evolution_verbose``.
         relax_steps (np.ndarray): Unpacked from ``evolution_verbose``.
+        shift (np.ndarray): Unpacked from ``evolution_verbose``.
         failing (np.ndarray): Unpacked from ``evolution_verbose``.
         stability_hist_list (np.ndarray): Unpacked from ``evolution_verbose``.
         stability_kde_x_list (np.ndarray): Unpacked from ``evolution_verbose``.
@@ -320,7 +321,8 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
         epsp_image.set_data(epsp[index])
     
         axes_plots[0].set_xlim(gammabar[0], gammabar[index]+0.01) #0.01 to avoid xlim = [0,0]
-        stress_strain.set_data(gammabar[0:index + 1], sigmabar[0:index + 1])
+        # stress_strain.set_data(gammabar[0:index + 1], sigmabar[0:index + 1])
+        stress_strain_extended.set_data(gammabar_extended[0:2*(index + 1)], sigmabar_extended[0:2*(index + 1)])
         axes_plots[1].set_ylim(0, np.max(relax_steps[0:index + 1]) + 1)
         avalanche_size.set_data(np.arange(index + 1), relax_steps[0:index + 1])
 
@@ -339,6 +341,10 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
         fig.canvas.draw()
     
     ############################### END OF LOCAL FUNCTIONS ######################################
+    
+    #extend stress-strain curve with shift
+    gammabar_extended = extend_with_shift(gammabar, shift)
+    sigmabar_extended = extend_with_shift(sigmabar, shift)
     
     if cut: last = np.argmax(relax_steps)
     else: last = -1
@@ -409,7 +415,8 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
     axes_plots = subfigs[1,0].subplots(1,2)
 
     ax = axes_plots[0]
-    stress_strain = ax.plot(gammabar[0:last], sigmabar[0:last])[0]
+    # stress_strain = ax.plot(gammabar[0:last], sigmabar[0:last])[0]
+    stress_strain_extended = ax.plot(gammabar_extended[0:2*last], sigmabar_extended[0:2*last])[0]
     ax.set_xlabel(r"$\epsilon$")
     ax.set_ylabel(r"$\sigma$")
 
@@ -516,13 +523,16 @@ def focus_on(all_axes, focus_axes, alpha=0.3):
         if not(ax in focus_axes):
             set_alpha(ax, alpha)
             
-def compute_and_show_statistics(epspbar, sigmabar, epsp_map, 
+def compute_and_show_statistics(epspbar, sigmabar, shift, epsp_map, 
                                 eps_sample_start=0, n_bins=10, cut_at=1):
     
-    eps = epspbar+sigmabar
+    #preparation
+    eps = epspbar+sigmabar #TODO: change with gammabar
+    eps = extend_with_shift(eps,shift)
+    sigmabar = extend_with_shift(sigmabar,shift)
+    
     
     sample_start = np.argwhere(eps>eps_sample_start)[0][0]
-    
     
     fig, axes = plt.subplots(2,2, figsize=(15,9))
     
@@ -578,3 +588,10 @@ def compute_and_show_statistics(epspbar, sigmabar, epsp_map,
     axes[1,1].plot(x_sample, power_law(x_sample, c, a), 
                  linestyle = '--', color = 'k', label=f'Exponent: {a:.2f}')
     axes[1,1].legend()
+    
+    
+def extend_with_shift(a, shift):
+    a_extended = np.repeat(a,2)
+    a_extended[1::2] += shift
+    
+    return a_extended
