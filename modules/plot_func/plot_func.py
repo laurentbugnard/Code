@@ -224,7 +224,8 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
                  relax_steps_bins_edges:np.ndarray,
                  CorrGen_params = None,
                  show_animation = False, rate = 1, fps = 1,
-                 cut = False):
+                 cut = False,
+                 epsp_scale='linear'):
     """Visualization function which shows the whole evolution of the EPM. 
     Top-left pannel: Evolution of stress and plastic strain fields.
     Bottom-left pannel: Evolution of stress-strain curve and avalanche sizes.
@@ -251,6 +252,7 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
         rate (int, optional): Number of data points per frame for the animation. Defaults to 1.
         fps (int, optional): Frames per second for the animation. Defaults to 1.
         cut (bool, optional): If True, only the evolution until the largest avalanche is shown.
+        epsp_scale (str, optional): The scale ('log' or 'linear') for the epsp image. Defaults to 'linear'.
 
     Returns:
         Either just a figure of the final results or an animation object (matplotlib.animation.FuncAnimation),
@@ -355,7 +357,11 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
     ax.set_title(r'$\sigma(x)$')
     #epsp(x)
     ax = axes_images[1]
-    epsp_image = ax.imshow(epsp[last], vmin = np.min(epsp[last]), vmax = np.max(epsp[last]))
+    if epsp_scale == 'log':
+        epsp_image = ax.imshow(epsp[last], norm=LogNorm(vmin = np.min(epsp[last][epsp[last]!=0]), vmax = np.max(epsp[last])), interpolation='none')
+    else:
+        epsp_image = ax.imshow(epsp[last], vmin = np.min(epsp[last]), vmax = np.max(epsp[last]))
+        
     epsp_cbar = subfigs[0,0].colorbar(epsp_image, aspect=10)
     ax.set_title(r'$\epsilon_p(x)$')
 
@@ -442,7 +448,7 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
     tracker = IndexTracker(len(sigma))
     fig.canvas.mpl_connect('key_press_event', tracker.on_press) 
     fig.canvas.mpl_connect('scroll_event', tracker.on_scroll)
-    fig.canvas.mpl_connect('button_press_event', tracker.on_mouse_click)
+    # fig.canvas.mpl_connect('button_press_event', tracker.on_mouse_click)
     
     #add textbox to navigate
     def submit(index):
@@ -509,3 +515,66 @@ def focus_on(all_axes, focus_axes, alpha=0.3):
     for ax in all_axes:
         if not(ax in focus_axes):
             set_alpha(ax, alpha)
+            
+def compute_and_show_statistics(epspbar, sigmabar, epsp_map, 
+                                eps_sample_start=0, n_bins=10, cut_at=1):
+    
+    eps = epspbar+sigmabar
+    
+    sample_start = np.argwhere(eps>eps_sample_start)[0][0]
+    
+    
+    fig, axes = plt.subplots(2,2, figsize=(15,9))
+    
+    axes[0,0].plot(eps, sigmabar)
+    axes[0,0].axvline(eps[sample_start], color='red', linestyle='--', 
+                    label=f'# of samples: {len(eps)-sample_start}')
+    axes[0,0].set_xlabel(r'$\epsilon$')
+    axes[0,0].set_ylabel(r'$\sigma$')
+    axes[0,0].legend()
+    
+    
+    epsp_image = axes[0,1].imshow(epsp_map, vmin = np.min(epsp_map), vmax = np.max(epsp_map))
+    fig.colorbar(epsp_image, aspect=10)
+    axes[0,1].set_title(r'$\epsilon_p(x)$')
+        
+    delta_sigmabar = np.diff(sigmabar)[sample_start:]
+    unloadings = -1 * delta_sigmabar[delta_sigmabar<0]
+    
+    axes[1,0].hist(unloadings, bins=n_bins, density=True)
+    axes[1,0].set_xlabel(r'$\Delta \sigma$')
+    axes[1,0].set_ylabel('density')
+    
+    bins = np.logspace(np.log10(np.min(unloadings)),np.log10(np.max(unloadings)), n_bins)
+    
+    
+    for x_coord in bins:
+        axes[1,0].axvline(x_coord, color='k', linestyle='--')
+    
+    
+    histogram = axes[1,1].hist(unloadings, bins=bins, density=True, edgecolor='k')
+    
+    axes[1,1].set_xscale('log')
+    axes[1,1].set_yscale('log')
+    axes[1,1].set_xlabel(r'$\Delta \sigma$')
+    axes[1,1].set_ylabel('density')
+    
+    #Select fitting values and range
+    centers = np.sqrt(bins[0:-1] * bins[1:]) #use geometric means for centers
+    
+    if type(cut_at) == list:
+        centers = centers[cut_at[0]:cut_at[1]]
+        values = histogram[0][cut_at[0]:cut_at[1]]
+    else:
+        last_index = int(cut_at*centers.size)
+        centers = centers[0:last_index]
+        values = histogram[0][0:last_index]
+    
+    axes[1,1].scatter(centers, values, color='red')
+    
+    #Do the power law fit:
+    c, a = power_law_fit(centers, values)
+    x_sample = np.linspace(centers[0], centers[-1], 10)
+    axes[1,1].plot(x_sample, power_law(x_sample, c, a), 
+                 linestyle = '--', color = 'k', label=f'Exponent: {a:.2f}')
+    axes[1,1].legend()
