@@ -14,7 +14,7 @@ from datetime import datetime
 
 #%%
 
-def full_simulation(params, nsteps, seed=0, save=True, file='./data/data.hdf5', mask=None):
+def full_simulation(params, nsteps, seed=0, save=True, file='./data/data.hdf5', mask=None, do_precompute=True, force_redo=False):
     
     #Prepare CorrGen parameters for the output
     CorrGen_params=None
@@ -32,7 +32,7 @@ def full_simulation(params, nsteps, seed=0, save=True, file='./data/data.hdf5', 
     with h5py.File(file, mode=mode) as f:
         
         ### First, check if the simulation already exists ###
-        if name in f:
+        if (name in f) and (not(force_redo)):
             #Check the total number of steps
             totalSteps = f.get(name + "/totalSteps")[...]
             
@@ -71,6 +71,9 @@ def full_simulation(params, nsteps, seed=0, save=True, file='./data/data.hdf5', 
                 del f[name] #TODO: don't restart from 0, but from last state instead
         
         ### Otherwise, do the simulation ###
+        if (name in f) and (force_redo):
+            print('ok')
+            del f[name]
         
         if params['map_type'] =='homog':
             sigmay_mean = np.ones((params['L'], params['L']))
@@ -100,7 +103,8 @@ def full_simulation(params, nsteps, seed=0, save=True, file='./data/data.hdf5', 
         res_dict = evolution_verbose(system, nsteps)
         
         #Precompute histograms and KDE's
-        res_dict = precompute(res_dict, mask=mask)
+        if do_precompute==True:
+            res_dict = precompute(res_dict, mask=mask)
         
         
         #then save in file
