@@ -138,8 +138,10 @@ def precompute(res_dict, mask=None):
     #STABILITY HISTOGRAM
     sigma = res_dict['sigma']
     sigmay = res_dict['sigmay']
+    sigmay_mean = res_dict['sigmay_mean']
     #prepare bins
-    stability_bins_edges = np.linspace(0,2*np.max(res_dict['sigmay_mean']),20)
+    max_non_inf = np.max(sigmay_mean[np.isfinite(sigmay_mean)])
+    stability_bins_edges = np.linspace(0,2*max_non_inf, 20)
     #make a list of histograms (one for each step)
     stability_hist_list = []
     stability_kde_x_list = []
@@ -152,7 +154,7 @@ def precompute(res_dict, mask=None):
             x = sigmay[index][mask.astype('bool')] - sigma[index][mask.astype('bool')]
 
         n, _ = np.histogram(x, stability_bins_edges, density = True)
-        kde_y, kde_x = pdf_kde(x.ravel(), numPoints=257)
+        kde_y, kde_x = pdf_kde(x.ravel()[x.ravel() < float('inf')], numPoints=257)
         stability_hist_list.append(n)
         stability_kde_x_list.append(kde_x.astype('float64'))
         stability_kde_y_list.append(kde_y.astype('float64'))

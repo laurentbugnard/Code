@@ -384,7 +384,8 @@ def show_results(sigmay_mean:np.ndarray, propagator:np.ndarray,
                               exponent_title + f'p = {CorrGen_params["p"]}', fontsize=18)
     #sigmaY(x)
     ax = axes_parameters[0,0]
-    sigmaY_image = ax.imshow(sigmay_mean)
+    sigmay_mean[sigmay_mean == float('inf')] = np.nan
+    sigmaY_image = ax.imshow(sigmay_mean, interpolation=None)
     sigmaY_cbar = subfigs[0,1].colorbar(sigmaY_image, aspect=5)
     ax.set_title(r'$<\sigma^Y(x)>$', fontsize=15)
     #G(x)
