@@ -84,8 +84,20 @@ def full_simulation(params, nsteps, seed=0, save=True, file='./data/data.hdf5', 
             sigmay_mean = cg.sigmaY
         elif params['map_type'] == 'custom':
             image = np.load(params['path'])
-            sigmay_mean = params['shift'] + params['scale']*image
             
+            #try to do shift with "low" and "high"
+            try:
+                sigmay_mean = shift_map_range(image, params['low'], params['high'])
+                
+            except:
+                #try with "shift" and "scale"
+                try:
+                    sigmay_mean = params['shift'] + params['scale']*image
+                #last possibility: just use image
+                except:
+                    sigmay_mean = image
+            
+            sigmay_mean = np.nan_to_num(sigmay_mean, nan=float('inf'))
 
         #Initialize
         print('Initializing system...', flush=True)
@@ -109,6 +121,9 @@ def full_simulation(params, nsteps, seed=0, save=True, file='./data/data.hdf5', 
         
         #then save in file
         if save:
+            
+            print('Saving to file...')
+            
             for k,v in res_dict.items():
                 f.create_dataset(name + '/'+ k, data = v)
             
@@ -118,6 +133,12 @@ def full_simulation(params, nsteps, seed=0, save=True, file='./data/data.hdf5', 
             #Store total number of states since initial state
             f.create_dataset(name + '/totalSteps', data = nsteps)
             
+            print('Done saving. \n')
         return res_dict, CorrGen_params
     
 #%%
+def shift_map_range(map, low, high):
+    assert(np.nanmin(map) == 0)
+    assert(np.nanmax(map) == 1)
+    
+    return (high-low) * map + low
