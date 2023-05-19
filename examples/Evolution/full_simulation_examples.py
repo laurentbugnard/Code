@@ -8,8 +8,8 @@ ipy_config()
 
 from EPM_func.EPM_func import *
 from matplotlib.animation import FFMpegWriter
-from plot_func.plot_func import *
-from EPM_func.full_func import *
+from Plotting.plot_func import *
+from Simulation.simulate import *
 
 #%% PARAMETERS TO SIMULATE
 # params = {
@@ -24,9 +24,9 @@ from EPM_func.full_func import *
 
 #%% Generate examples
 params = {'L': 100, 'stabCoef': 1}
-homog_failure, _ = full_simulation(params, nsteps=400, homogeneous=True)
+homog_failure, _ = simulate(params, nsteps=400, homogeneous=True)
 params.update({'stabCoef': 2.5})
-homog_flow, _ = full_simulation(params, nsteps=600, homogeneous=True)
+homog_flow, _ = simulate(params, nsteps=600, homogeneous=True)
 params.update({
     'xi': float('inf'),
     'method': 'alpha',
@@ -34,7 +34,7 @@ params.update({
     'p': 0.5,
     'stabCoef': 1
 })
-progressive_failure, CorrGen_params = full_simulation(params, nsteps=600)
+progressive_failure, CorrGen_params = simulate(params, nsteps=600)
 
 
 #%% Plot results

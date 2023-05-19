@@ -5,7 +5,7 @@ import sys
 sys.path.append('./modules')
 from config.ipy_config import ipy_config
 ipy_config()
-from plot_func.plot_func import *
+from Plotting.plot_func import *
 from CorrGen.CorrGen import *
 
 
