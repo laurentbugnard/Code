@@ -76,12 +76,12 @@ def format_params(params):
     return params, params_df
 
 def load_results(params_df, folder):
-    #TODO: structure is not very clean. Find something better.
     try:
         #load results_df
         df = pd.read_csv(f'{folder}/results_df.csv', index_col=0)
         
         #trick to look for a match. Raises an error if no or multiple matches.
+        #TODO: check if it works in more complicated cases, e.g. when we have new columns (due to other map_types)
         index = df.reset_index().merge(params_df)['index'].item()
     
     except:

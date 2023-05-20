@@ -540,7 +540,6 @@ def focus_on(all_axes, focus_axes, alpha=0.3):
             set_alpha(ax, alpha)
 
 
-#TODO: Make it work using the precomputed statistics
 def show_statistics(results):
     
     try:
