@@ -5,9 +5,10 @@ sys.path.append('./modules')
 
 import numpy as np
 import warnings
-from datetime import datetime
 from scipy.signal import fftconvolve
 from tqdm import tqdm
+import pandas as pd
+import pickle
 
 from GooseEPM import elshelby_propagator
 from GooseEPM import SystemAthermal
@@ -16,33 +17,32 @@ from Results.Results import Results
 from CorrGen.CorrGen import CorrGen
 
 
-def simulate(params, nsteps, save=True, mask=None, force_redo=False):
-    #TODO: specify that nsteps is the number of shift+relax and that all outputs
+def simulate(params, save=True, folder='./data', force_redo=False, full_processing=True):
+    # In docstring: specify that nsteps is the number of shift+relax and that all outputs
     # will have length 2*nsteps + 1 (initial state)
     
     #A) Format params
-    #TODO: maybe this should be done outside of here?
-    params = format_params(params)
+    params, params_df = format_params(params)
     
     #B) Check if simulation already exists
-    #TODO: uncomment and implement
-    # try:
-    #     results = load_results(params)
-    # except: #TODO: add different types of error (e.g. FileNotFound)
-    #     print("No previous simulation.")
-    # else:
-    #     print("Returning previous simulation.")
-    #     return results
+    #TODO: consider using hydra instead
+    if not force_redo:
+        try:
+            results = load_results(params_df, folder)
+            print("Returning previous simulation.")
+            return results
+        except:
+            print("No previous simulation.")
         
     #C) Create system (physics)
     system = create_system(params)
     
     #D) Initialize results (observer)
-    results = Results(system, nsteps, params['seed'], params['map_type'], params['sigma_std'], params['meta'])
+    results = Results(system, params['nsteps'], params['seed'], params['map_type'], params['sigma_std'])#, params['meta'])
     
     #E) Evolve system
     print('Evolving system...', flush=True)
-    for _ in tqdm(range(nsteps)):
+    for _ in tqdm(range(params['nsteps'])):
         system.shiftImposedShear()
         results.add_observation(system)
         system.relaxAthermal()
@@ -51,98 +51,73 @@ def simulate(params, nsteps, save=True, mask=None, force_redo=False):
     #F) Process results
     print('Processing results...', flush=True)
     results.process_basic()
-    results.process_extra()
-    #TODO: add other processing
-        
+    if full_processing:
+        results.process_stability()
+        results.process_statistics()
         
     #G) Save results
     if save:
-        #TODO
         print("Saving results...", flush=True)
-        pass
+        save_results(results, params_df, folder)
+    
     
     return results
-    
-    #TODO: delete everything
-    #Give a standardized name to the simulation according to conventions
-    name = to_str(params) + f'/seed={seed}'
-    
-    #check if file already exists
-    if os.path.exists(file): mode = 'r+'
-    else: mode = 'w'
-    
-    with h5py.File(file, mode=mode) as f:
-        
-        ### First, check if the simulation already exists ###
-        if (name in f) and (not(force_redo)):
-            #Check the total number of steps
-            totalSteps = f.get(name + "/totalSteps")[...]
-            
-            #If the simulation went far enough
-            if nsteps <= totalSteps:
-                date = f.get(name + '/date')[...]
-                print(f'A simulation with these parameters and nsteps={totalSteps} already exists.')
-                print(f'Returning previous results ({date}) truncated to nsteps={nsteps}.')
-                
-                #Get the previous data and turn it back into a dictionary
-                res_group = f.get(name)
-                res_dict = {}
-                for key in res_group.keys():
-                    #Only truncate values that have the size of totalSteps (or close)
-                    try: #try block to avoid errors
-                        if res_group[key].shape[0] == totalSteps + 1:
-                            res_dict.update({key: res_group[key][...][:nsteps+1]})
-                        elif res_group[key].shape[0] == totalSteps:
-                            res_dict.update({key: res_group[key][...][:nsteps]})
-                        else:
-                            res_dict.update({key: res_group[key][...]}) #no truncation
-                            
-                    except: #still no truncation (execute if there was an error)
-                        res_dict.update({key: res_group[key][...]}) #no truncation
-                        
-                    
-                del res_dict['date']; del res_dict['totalSteps']
-                    
-                return res_dict, CorrGen_params
-            
-            #If the simulation was too short
-            else:
-                #Delete it and restart from 0
-                print(f'A simulation with these parameters but a too small number of steps (nsteps={totalSteps}) already exists.')
-                print('Deleting and starting from zero.')
-                del f[name] #TODO: don't restart from 0, but from last state instead
-        
-        
-        
-        #then save in file
-        if save:
-            
-            print('Saving to file...')
-            
-            for k,v in res_dict.items():
-                f.create_dataset(name + '/'+ k, data = v)
-            
-            #Store also datetime of creation
-            f.create_dataset(name + '/date', 
-                             data = datetime.now().strftime('%Y_%m_%d_%H_%M_%S'))
-            #Store total number of states since initial state
-            f.create_dataset(name + '/totalSteps', data = nsteps)
-            
-            print('Done saving. \n')
-        return res_dict, CorrGen_params
 
 
 def format_params(params):
     #TODO: format everything well (if things are correctable). Otherwise raise an error
     #The goal of this function is to add some flexibility to the params. 
     # For example if no seed was given, use seed 0
-    return params
+    # Also, it makes sure that every simulation is saved according to a convention
+    # Make sure the number of decimals is max 5 or something like this
+    params_df = pd.DataFrame(params, index=[0])
+    # params_df['meta'] = [params['meta']]
+    
+    return params, params_df
 
-def load_results(params):
-    #goes through the metadata and returns the simulation object
-    #if it couldn't find the file: raise an FileNotFound error and delete from the metadata
-    #TODO
-    pass
+def load_results(params_df, folder):
+    #TODO: structure is not very clean. Find something better.
+    try:
+        #load results_df
+        df = pd.read_csv(f'{folder}/results_df.csv', index_col=0)
+        
+        #trick to look for a match. Raises an error if no or multiple matches.
+        index = df.reset_index().merge(params_df)['index'].item()
+    
+    except:
+        raise Exception("Simulation doesn't exist.")
+    
+    else:
+        try:
+            with open(f'{folder}/{index}.pkl', 'rb') as file:
+                return pickle.load(file)
+        
+        except:
+            #TODO: delete corrupted row
+            raise Exception("Simulation exists but corrupted data.")
+
+def save_results(results, params_df, folder):
+    try:
+        df = pd.read_csv(f'{folder}/results_df.csv', index_col=0)
+    
+    except:
+        df = params_df
+        new_index = df.index[0]
+    
+    else:
+        #find the smallest new index
+        new_index = np.max(df.index) + 1
+        params_df.index = [new_index]
+        #add row
+        df = pd.concat([df, params_df])
+    
+    finally:
+        #save df
+        df.to_csv(f'{folder}/results_df.csv')
+        
+        #save Results object
+        with open(f'{folder}/{new_index}.pkl', 'wb') as file:
+                pickle.dump(results, file)
 
 def create_system(params):
     
@@ -163,9 +138,7 @@ def create_system(params):
             sigmay_mean = cg.sigmaY
         
         case _ :
-            #TODO: raise the correct type of error
-            pass
-        
+            raise Exception("Invalid 'map_type'. Use 'homog, 'custom' or 'cg'.")        
     
     print('Initializing system...', flush=True)
     system = SystemAthermal(
