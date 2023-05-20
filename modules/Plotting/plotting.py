@@ -228,7 +228,7 @@ def pannel(results):
         
         #sigma(x)
         ax = axes_images[0]
-        sigma_image = ax.imshow(sigma[-1], vmin = np.min(sigma), vmax = np.max(sigma))
+        sigma_image = ax.imshow(sigma[-1], vmin = np.min(sigma), vmax = np.max(sigma), interpolation='none')
         to_update.append({'obj':sigma_image, 'data':results.sigma})
         sigma_cbar = subfig.colorbar(sigma_image, aspect=10)
         ax.set_title(r'$\sigma(x)$')
@@ -241,7 +241,7 @@ def pannel(results):
                                                 vmax = np.max(epsp[-1])), 
                                 interpolation='none')
         else:
-            epsp_image = ax.imshow(epsp[-1], vmin = np.min(epsp[-1]), vmax = np.max(epsp[-1]))    
+            epsp_image = ax.imshow(epsp[-1], vmin = np.min(epsp[-1]), vmax = np.max(epsp[-1]), interpolation='none')    
         
         to_update.append({'obj':epsp_image, 'data':results.epsp})
         
@@ -256,13 +256,13 @@ def pannel(results):
         ax = axes_parameters['A']
         sigmay_mean = results._sigmay_mean
         sigmay_mean[sigmay_mean == float('inf')] = np.nan
-        sigmaY_image = ax.imshow(sigmay_mean, interpolation=None)
+        sigmaY_image = ax.imshow(sigmay_mean, interpolation='none')
         sigmaY_cbar = subfig.colorbar(sigmaY_image, aspect=5)
         ax.set_title(r'$<\sigma^Y(x)>$', fontsize=15)
         
         #propagator
         ax = axes_parameters['B']
-        propagator_image = ax.imshow(results._propagator, norm = LogNorm())
+        propagator_image = ax.imshow(results._propagator, norm = LogNorm(), interpolation='none')
         ax.set_xticks([])
         ax.set_yticks([])
         propagator_cbar = subfig.colorbar(propagator_image, aspect = 5)
@@ -300,21 +300,25 @@ def pannel(results):
         ax.set_ylabel(r"$\sigma$")
         
         #Stability distribution
-        ax = axes_plots[1]
-        
-        _, _, stability_bar_containers = ax.hist([0], bins=results.stability_bins_edges,
-                                                  ec="black", alpha=0.5, density = True)
-        for count, rect in zip(results.stability_hist[-1], stability_bar_containers):
-            rect.set_height(count)
-        to_update.append({'obj':stability_bar_containers, 'data':results.stability_hist})
+        #only do it if it was precomputed
+        try:
+            ax = axes_plots[1]
             
-        stability_kde = ax.plot(*results.stability_kde[-1])[0]
-        to_update.append({'obj':(stability_kde, 'full'), 'data': results.stability_kde})
-        ax.set_title(r'$P(x)$', fontsize=15)
-        ax.set_xlim(results.stability_bins_edges[0], results.stability_bins_edges[-1])
-        stability_bins_edges_width = results.stability_bins_edges[1] - results.stability_bins_edges[0]
-        ax.set_ylim(0, 0.25 * 1/stability_bins_edges_width) #somewhat arbitrary
-
+            _, _, stability_bar_containers = ax.hist([0], bins=results.stability_bins_edges,
+                                                    ec="black", alpha=0.5, density = True)
+            for count, rect in zip(results.stability_hist[-1], stability_bar_containers):
+                rect.set_height(count)
+            to_update.append({'obj':stability_bar_containers, 'data':results.stability_hist})
+                
+            stability_kde = ax.plot(*results.stability_kde[-1])[0]
+            to_update.append({'obj':(stability_kde, 'full'), 'data': results.stability_kde})
+            ax.set_title(r'$P(x)$', fontsize=15)
+            ax.set_xlim(results.stability_bins_edges[0], results.stability_bins_edges[-1])
+            stability_bins_edges_width = results.stability_bins_edges[1] - results.stability_bins_edges[0]
+            ax.set_ylim(0, 0.25 * 1/stability_bins_edges_width) #somewhat arbitrary
+        except:
+            ax = axes_plots[1]
+            ax.set_facecolor((1,0,0,0.3))
         
     def avalanche_pannel(subfig, epsp):
         #TODO: change name, maybe not avalanche
@@ -322,7 +326,7 @@ def pannel(results):
 
         #Events
         ax = axes_avalanches[0]
-        events = ax.imshow(results.event_maps[-1], vmin=0, vmax=1)
+        events = ax.imshow(results.event_maps[-1], vmin=0, vmax=1, interpolation='none')
         to_update.append({'obj':events, 'data':results.event_maps})
         ax.set_title('Events')
         

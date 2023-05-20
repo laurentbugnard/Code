@@ -4,7 +4,7 @@ from scipy import fft
 import pandas as pd
 import sys
 
-from Plotting.plot_func import plot_map, plot_ft, power_law, power_law_fit, regularized_power_law
+from Plotting.plotting import plot_map, plot_ft, power_law, power_law_fit, regularized_power_law
 
 class CorrGen(object):
     """Object used to generate a random but power-law-correlated yield stress field, like described in the README.
