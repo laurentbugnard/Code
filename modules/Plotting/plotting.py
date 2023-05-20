@@ -536,61 +536,45 @@ def focus_on(all_axes, focus_axes, alpha=0.3):
             set_alpha(ax, alpha)
 
 
-# #TODO: Make it work using the precomputed statistics
-# def show_statistics(epspbar, sigmabar, shift, epsp_map, 
-#                                 eps_sample_start=0, n_bins=10, cut_at=1):
+#TODO: Make it work using the precomputed statistics
+def show_statistics(results):
     
-#     #preparation
-#     eps = epspbar+sigmabar #TODO: change with gammabar
-#     eps = extend_with_shift(eps,shift)
-#     sigmabar = extend_with_shift(sigmabar,shift)
+    try:
+        statistics = results.statistics
+    except:
+        pass
+        #TODO: uncomment when sample_start is implemented
+        # results.process_statistics(sample_start=0)
+        # statistics = results.statistics
     
+    epsbar = results.epspbar + results.sigmabar
+    hist = statistics['hist']
     
-#     sample_start = np.argwhere(eps>eps_sample_start)[0][0]
+    fig, axes = plt.subplot_mosaic('AB;CC', figsize=(15,9))
     
-#     fig, axes = plt.subplots(2,2, figsize=(15,9))
+    #A
+    axes['A'].plot(epsbar, results.sigmabar)
+    axes['A'].axvline(epsbar[statistics['sample_start']], color='red', linestyle='--', 
+                    label=f"# of samples: {statistics['n_samples']}")
+    axes['A'].set_xlabel(r'$\epsilon$')
+    axes['A'].set_ylabel(r'$\sigma$')
+    axes['A'].legend()
     
-#     axes[0,0].plot(eps, sigmabar)
-#     axes[0,0].axvline(eps[sample_start], color='red', linestyle='--', 
-#                     label=f'# of samples: {len(eps)-sample_start}')
-#     axes[0,0].set_xlabel(r'$\epsilon$')
-#     axes[0,0].set_ylabel(r'$\sigma$')
-#     axes[0,0].legend()
+    #B
+    epsp_image = axes['B'].imshow(results.epsp[-1], interpolation='none')
+    fig.colorbar(epsp_image, aspect=10)
+    axes['B'].set_title(r'$\epsilon_p(x)$')    
     
+    #C
+    axes['C'].bar(x = hist[1][:-1], height = hist[0], width = np.diff(hist[1]), 
+       align='edge', edgecolor='k', color=(0,0,1,0.3))
+    axes['C'].scatter(*statistics['centers'], color='red')
+    x_sample = np.linspace(statistics['centers'][0][0], statistics['centers'][0][-1], 10)
+    axes['C'].plot(x_sample, power_law(x_sample, *statistics['fit']), 
+                 linestyle = '--', color = 'k', label=f"Exponent: {statistics['fit'][1]:.2f}")
     
-#     epsp_image = axes[0,1].imshow(epsp_map, vmin = np.min(epsp_map), vmax = np.max(epsp_map))
-#     fig.colorbar(epsp_image, aspect=10)
-#     axes[0,1].set_title(r'$\epsilon_p(x)$')
-        
-    
-#     axes[1,0].hist(unloadings, bins=n_bins, density=True)
-#     axes[1,0].set_xlabel(r'$\Delta \sigma$')
-#     axes[1,0].set_ylabel('density')
-    
-    
-#     histogram = axes[1,1].hist(unloadings, bins=bins, density=True, edgecolor='k')
-    
-#     axes[1,1].set_xscale('log')
-#     axes[1,1].set_yscale('log')
-#     axes[1,1].set_xlabel(r'$\Delta \sigma$')
-#     axes[1,1].set_ylabel('density')
-    
-#     #Select fitting values and range
-#     centers = np.sqrt(bins[0:-1] * bins[1:]) #use geometric means for centers
-    
-#     if type(cut_at) == list:
-#         centers = centers[cut_at[0]:cut_at[1]]
-#         values = histogram[0][cut_at[0]:cut_at[1]]
-#     else:
-#         last_index = int(cut_at*centers.size)
-#         centers = centers[0:last_index]
-#         values = histogram[0][0:last_index]
-    
-#     axes[1,1].scatter(centers, values, color='red')
-    
-#     #Do the power law fit:
-#     c, a = power_law_fit(centers, values)
-#     x_sample = np.linspace(centers[0], centers[-1], 10)
-#     axes[1,1].plot(x_sample, power_law(x_sample, c, a), 
-#                  linestyle = '--', color = 'k', label=f'Exponent: {a:.2f}')
-#     axes[1,1].legend()
+    axes['C'].set_xscale('log')
+    axes['C'].set_yscale('log')
+    axes['C'].set_xlabel(r'$\Delta \sigma$')
+    axes['C'].set_ylabel('density')
+    axes['C'].legend()

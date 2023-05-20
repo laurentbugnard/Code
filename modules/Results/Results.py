@@ -24,20 +24,14 @@ class Results(object):
     sigma:list
     sigmay:list
     
-    epspbar:list #TODO: should I go back to using np.ndarray?
+    epspbar:list
     sigmabar:list
-    
-    #processed results: #TODO: add the possible ones here?
     
     
     def __init__(self, system,
                  nsteps, seed, map_type, sigma_std,
                  meta = {}):
         assert system.shape[0] == system.shape[1], "System not square."
-        assert type(nsteps) == int, "nsteps must be int."
-        assert type(seed) == int, "seed must be int."
-        assert type(map_type) == str, "map_type must be str."
-        # assert type(sigma_std) == float, "sigma_std must be float." #TODO: see how to correct
         assert type(meta) == dict, "meta must be dict."
         
         #parameters
@@ -62,7 +56,6 @@ class Results(object):
         self.epspbar = [np.mean(system.epsp)]
         
     def add_observation(self, system):
-        #TODO: check if using an array (knowing nsteps from the beginning) makes things much faster
         self.sigmabar.append(system.sigmabar)
         self.epspbar.append(np.mean(system.epsp))
         self.sigmay.append(system.sigmay.copy())
@@ -72,8 +65,6 @@ class Results(object):
     def process_basic(self):
         self.epspbar = np.array(self.epspbar)
         self.sigmabar = np.array(self.sigmabar)
-    
-    def process_extra(self):
         self.add_event_maps()
     
     def add_event_maps(self):
@@ -81,7 +72,11 @@ class Results(object):
                            for i in range(1, len(self.epsp))]
         self.event_maps.insert(0, np.zeros_like(self.epsp[0])) #no event in the 0th step
         
-        
+    #TODO: do a function that decomposes transient and stationary
+    def decompose(self):
+        pass
+    
+
     def process_stability(self, mask=None):
         
         print("Processing stability...")
@@ -118,20 +113,27 @@ class Results(object):
 
         bin_edges = np.logspace(np.log10(np.min(unloadings)),np.log10(np.max(unloadings)), n_bins)
         
-        self.statistics_hist = np.hist(unloadings, bins=bin_edges, density=True)
+        statistics_hist = np.histogram(unloadings, bins=bin_edges, density=True)
         
         #Fitting
         centers = np.sqrt(bin_edges[0:-1] * bin_edges[1:]) #use geometric means for centers
         #set range
         if type(cut_at) == list:
             centers = centers[cut_at[0]:cut_at[1]]
-            values = self.statistics_hist[0][cut_at[0]:cut_at[1]]
+            values = statistics_hist[0][cut_at[0]:cut_at[1]]
         else:
             last_index = int(cut_at*centers.size)
             centers = centers[0:last_index]
-            values = self.statistics_hist[0][0:last_index]
+            values = statistics_hist[0][0:last_index]
 
         #Do the power law fit:
-        _, a = power_law_fit(centers, values)
-        self.exponent = a
+        c, a = power_law_fit(centers, values)
+        
+        #Save everything in dictionnary
+        self.statistics = {'hist':statistics_hist, 'centers':(centers, values),
+                           'sample_start':sample_start, 'cut_at':cut_at,
+                           'n_samples':unloadings.size,
+                           'fit':(c,a)}
         #TODO: for analysis, make sure to verify that the fits are okay, and maybe correct them by hand
+        
+    #TODO: make a function for sigma_max and sigma_c
