@@ -296,8 +296,15 @@ def pannel(results):
         stress_strain = ax.plot(sigmabar + epspbar, sigmabar)[0]
         to_update.append({'obj':(stress_strain,'progressive'), 
                           'data':(results.sigmabar + results.epspbar, results.sigmabar)})
+        ax.axhline(results.sigma_max, linestyle='dashed', color = 'k', 
+                   label=r'$\sigma_{max} = $' + f'{results.sigma_max:.2f}')
+        ax.axhline(results.sigma_c, linestyle='dotted', color = 'k', 
+                   label=r'$\sigma_{c} = $' + f'{results.sigma_c:.2f}')
+        ax.fill_between((sigmabar + epspbar)[results.idx_linear], 0, results.sigma_max, color = (0,0,1,0.1))
+        ax.fill_between((sigmabar + epspbar)[results.idx_flow], 0, results.sigma_max, color = (1,0,0,0.1))
         ax.set_xlabel(r"$\epsilon$")
         ax.set_ylabel(r"$\sigma$")
+        ax.legend()
         
         #Stability distribution
         #only do it if it was precomputed
@@ -368,7 +375,7 @@ def pannel(results):
     
     #Interactive
     global tracker #trick: make tracker global so it exists outside "pannel" and the connection remains
-    tracker = IndexTracker(fig, to_update, update_function, max_index=2*results._nsteps+1)
+    tracker = IndexTracker(fig, to_update, update_function, max_index=results.sigmabar.size -1)
     fig.canvas.mpl_connect('key_press_event', tracker.on_press) 
     fig.canvas.mpl_connect('scroll_event', tracker.on_scroll)
     # fig.canvas.mpl_connect('button_press_event', tracker.on_mouse_click)
@@ -546,9 +553,8 @@ def show_statistics(results):
         statistics = results.statistics
     except:
         pass
-        #TODO: uncomment when sample_start is implemented
-        # results.process_statistics(sample_start=0)
-        # statistics = results.statistics
+        results.process_statistics()
+        statistics = results.statistics
     
     epsbar = results.epspbar + results.sigmabar
     hist = statistics['hist']
@@ -557,7 +563,7 @@ def show_statistics(results):
     
     #A
     axes['A'].plot(epsbar, results.sigmabar)
-    axes['A'].axvline(epsbar[statistics['sample_start']], color='red', linestyle='--', 
+    axes['A'].axvline(epsbar[results.idx_transition], color='red', linestyle='--', 
                     label=f"# of samples: {statistics['n_samples']}")
     axes['A'].set_xlabel(r'$\epsilon$')
     axes['A'].set_ylabel(r'$\sigma$')
