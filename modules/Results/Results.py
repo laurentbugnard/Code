@@ -3,6 +3,7 @@ from GooseEPM import SystemAthermal
 from tqdm import tqdm
 from fastkde.fastKDE import pdf as pdf_kde
 from Plotting.plotting import power_law, power_law_fit
+import warnings
 
 class Results(object):
     #parameters
@@ -66,20 +67,33 @@ class Results(object):
         self.epspbar = np.array(self.epspbar)
         self.sigmabar = np.array(self.sigmabar)
         self.add_event_maps()
+        
+        self.decompose()
+        self.process_curve()
     
     def add_event_maps(self):
         self.event_maps = [(self.epsp[i]- self.epsp[i-1])!=0 
                            for i in range(1, len(self.epsp))]
         self.event_maps.insert(0, np.zeros_like(self.epsp[0])) #no event in the 0th step
         
-    #TODO: do a function that decomposes transient and stationary
-    def decompose(self):
-        pass
+    #TODO: find a better algorithm. This will tend to overestimate the linear regime
+    def decompose(self):        
+        self.idx_transition = np.argmax(self.sigmabar)
+        
+        self.idx_linear = np.arange(self.idx_transition + 1)
+        self.idx_flow = np.arange(self.idx_transition + 1, len(self.sigmabar))
+        
+        if self.idx_flow.size < 100:
+            warnings.warn("Less than 100 samples in flow regime!")
+    
+    def process_curve(self):
+        self.sigma_max = self.sigmabar[self.idx_transition]
+        self.sigma_c = np.mean(self.sigmabar[self.idx_flow])
     
 
     def process_stability(self, mask=None):
         
-        print("Processing stability...")
+        print("Processing stability...", flush=True)
         
         sigma = self.sigma
         sigmay = self.sigmay
@@ -105,10 +119,10 @@ class Results(object):
             self.stability_hist.append(n)
             self.stability_kde.append((kde_x.astype('float64'), kde_y.astype('float64')))
             
-    def process_statistics(self, sample_start, n_bins=30, cut_at=1):
-        #TODO: add condition to start sampling instead of parameter. Same for cut_at
+    def process_statistics(self, n_bins=30, cut_at=1):
         
-        delta_sigmabar = np.diff(self.sigmabar)[sample_start:]
+        idx_linear = self.idx_linear
+        delta_sigmabar = np.diff(self.sigmabar)[idx_linear]
         unloadings = -1 * delta_sigmabar[delta_sigmabar<0]
 
         bin_edges = np.logspace(np.log10(np.min(unloadings)),np.log10(np.max(unloadings)), n_bins)
@@ -131,7 +145,7 @@ class Results(object):
         
         #Save everything in dictionnary
         self.statistics = {'hist':statistics_hist, 'centers':(centers, values),
-                           'sample_start':sample_start, 'cut_at':cut_at,
+                           'cut_at':cut_at,
                            'n_samples':unloadings.size,
                            'fit':(c,a)}
         #TODO: for analysis, make sure to verify that the fits are okay, and maybe correct them by hand
