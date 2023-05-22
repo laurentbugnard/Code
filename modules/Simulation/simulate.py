@@ -20,6 +20,9 @@ from CorrGen.CorrGen import CorrGen
 def simulate(params, save=True, folder='./data', force_redo=False, full_processing=True):
     # In docstring: specify that nsteps is the number of shift+relax and that all outputs
     # will have length 2*nsteps + 1 (initial state)
+    #TODO: by default, make it not return anything (a bit faster, no loading etc.)
+    
+    print('Parameters:', params, flush=True)
     
     #A) Format params
     params, params_df = format_params(params)
@@ -93,8 +96,9 @@ def load_results(params_df, folder):
                 return pickle.load(file)
         
         except:
-            #TODO: delete corrupted row
-            raise Exception("Simulation exists but corrupted data.")
+            df = df.drop(index)
+            df.to_csv(f'{folder}/results_df.csv')
+            raise Exception("Simulation exists but corrupted data. Removed row.")
 
 def save_results(results, params_df, folder):
     try:
@@ -185,3 +189,30 @@ def init_sigma(system, sigma_std=0.1, seed=0, relax=True):
     system.sigma = fftconvolve(dsig_pad, system.propagator, mode='valid')
     
     if relax: system.relaxAthermal()
+
+
+#TODO: very slow, try optimizing
+def extract(params_list, func, ignore=[], folder='./data', exact_nsteps=False):
+    
+    #Ignoring certain keys
+    for element in ignore:
+        for params in params_list:
+            try:
+                del params[element]
+            except:
+                pass
+
+    df = pd.DataFrame(columns=params_list[0])
+    
+    for params in tqdm(params_list):
+        _, params_df = format_params(params)
+        
+        results = load_results(params_df, folder, exact_nsteps)
+        
+        #TODO: update also the nsteps if it was not exact
+        new_values_dict = func(results)
+        new_row = params_df.assign(**new_values_dict)
+        
+        df = df.merge(new_row, how='outer')
+    
+    return df
