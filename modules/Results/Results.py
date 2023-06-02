@@ -30,14 +30,13 @@ class Results(object):
     
     
     def __init__(self, system,
-                 nsteps, seed, map_type, sigma_std,
+                 seed, map_type, sigma_std,
                  meta = {}):
         assert system.shape[0] == system.shape[1], "System not square."
         assert type(meta) == dict, "meta must be dict."
         
         #parameters
         self._L = system.shape[0]
-        self._nsteps = nsteps
         self._seed = seed
         self._map_type = map_type
         self._sigmay_mean = system.sigmay_mean
@@ -83,8 +82,6 @@ class Results(object):
         self.idx_linear = np.arange(self.idx_transition + 1)
         self.idx_flow = np.arange(self.idx_transition + 1, len(self.sigmabar))
         
-        if self.idx_flow.size < 100:
-            warnings.warn("Less than 100 samples in flow regime!")
     
     def process_curve(self):
         self.sigma_max = self.sigmabar[self.idx_transition]

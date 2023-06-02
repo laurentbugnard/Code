@@ -17,43 +17,80 @@ from Results.Results import Results
 from CorrGen.CorrGen import CorrGen
 
 
-def simulate(params, save=True, folder='./data', force_redo=False, full_processing=True):
+def simulate(params, save=True, folder='./data', force_redo=False, full_processing=False, exact_nsteps=False):
     # In docstring: specify that nsteps is the number of shift+relax and that all outputs
     # will have length 2*nsteps + 1 (initial state)
     #TODO: by default, make it not return anything (a bit faster, no loading etc.)
     
     print('Parameters:', params, flush=True)
     
-    #A) Format params
-    params, params_df = format_params(params)
+    #A) Format params and get the nsteps mode
+    params = params.copy() #make sure to copy them to not modify
+    params, nsteps_mode = format_params(params)
     
     #B) Check if simulation already exists
-    #TODO: consider using hydra instead
     if not force_redo:
         try:
-            results = load_results(params_df, folder)
-            print("Returning previous simulation.")
+            results = load_results(params, folder, nsteps_mode)
             return results
-        except:
-            print("No previous simulation.")
+        except CustomException as e:
+            print(e, flush=True)
+        
+        # except Exception as e:
+        #     raise e
+    
+    else: print("Force redoing the simulation.", flush=True)
         
     #C) Create system (physics)
     system = create_system(params)
     
     #D) Initialize results (observer)
-    results = Results(system, params['nsteps'], params['seed'], params['map_type'], params['sigma_std'])#, params['meta'])
+    results = Results(system, params['seed'], params['map_type'], params['sigma_std'])
     
     #E) Evolve system
     print('Evolving system...', flush=True)
-    for _ in tqdm(range(params['nsteps'])):
-        system.shiftImposedShear()
-        results.add_observation(system)
-        system.relaxAthermal()
-        results.add_observation(system)
+    
+    if nsteps_mode in ['fixed', 'min']:
+        
+        nsteps = params['nsteps']
+        results._nsteps = nsteps
+        
+        for _ in tqdm(range(nsteps)):
+            system.shiftImposedShear()
+            results.add_observation(system)
+            system.relaxAthermal()
+            results.add_observation(system)
+    
+    elif nsteps_mode == 'min_flow':
+    
+        stop_condition = False
+        progress = tqdm()
+        i = 0
+        
+        while not stop_condition:
+            system.shiftImposedShear()
+            results.add_observation(system)
+            system.relaxAthermal()
+            results.add_observation(system)
+            
+            #use nsteps as imposed flow size
+            results.decompose()
+            stop_condition = ((results.idx_flow.size - 1)/2 >= params['nsteps'])
+            
+            progress.update()
+            i +=1
+        
+        #set nsteps value to actual number of steps
+        results._nsteps = i
+        params['nsteps'] = i
+        
+    else: raise CustomException('Invalid nsteps mode.')
+        
     
     #F) Process results
     print('Processing results...', flush=True)
     results.process_basic()
+    
     if full_processing:
         results.process_stability()
         results.process_statistics()
@@ -61,51 +98,88 @@ def simulate(params, save=True, folder='./data', force_redo=False, full_processi
     #G) Save results
     if save:
         print("Saving results...", flush=True)
-        save_results(results, params_df, folder)
+        params['flow_samples'] = (results.idx_flow.size - 1)/2 #add this additional column before saving
+        save_results(results, params, folder)
     
     
     return results
 
 
 def format_params(params):
-    #TODO: format everything well (if things are correctable). Otherwise raise an error
     #The goal of this function is to add some flexibility to the params. 
-    # For example if no seed was given, use seed 0
-    # Also, it makes sure that every simulation is saved according to a convention
-    # Make sure the number of decimals is max 5 or something like this
-    params_df = pd.DataFrame(params, index=[0])
-    # params_df['meta'] = [params['meta']]
+    #Also, it makes sure that every simulation is saved according to a convention
     
-    return params, params_df
-
-def load_results(params_df, folder):
-    try:
-        #load results_df
-        df = pd.read_csv(f'{folder}/results_df.csv', index_col=0)
-        
-        #trick to look for a match. Raises an error if no or multiple matches.
-        #TODO: check if it works in more complicated cases, e.g. when we have new columns (due to other map_types)
-        index = df.reset_index().merge(params_df)['index'].item()
     
-    except:
-        raise Exception("Simulation doesn't exist.")
-    
-    else:
+    # Make sure the number of decimals is max 5 (as a convention, to avoid precision problems)
+    for key, val in params.items():
         try:
-            with open(f'{folder}/{index}.pkl', 'rb') as file:
-                return pickle.load(file)
-        
+            params[key] = round(val,5)
         except:
-            df = df.drop(index)
-            df.to_csv(f'{folder}/results_df.csv')
-            raise Exception("Simulation exists but corrupted data. Removed row.")
+            pass
+    
+    #Set some default values if not provided:
+    if 'seed' not in params:
+        params['seed'] = 0
+    
+    
+    
+    #FORMAT NSTEPS
+    #If it is a tuple, extract the nsteps_mode:
+    if type(params['nsteps']) == tuple:
+        nsteps_mode = params['nsteps'][0]
+        params['nsteps'] = params['nsteps'][1]
+    
+    #Otherwise use value as it is:
+    else:
+        nsteps_mode = 'fixed'
+    
+    return params, nsteps_mode
 
-def save_results(results, params_df, folder):
+def load_results(params, folder, nsteps_mode):
+    
+    params_df = pd.DataFrame(params, index=[0])
+    
+    try:
+        df = pd.read_csv(f'{folder}/results_df.csv', index_col=0)
+        matches = find_matches(df, params_df, nsteps_mode)
+        
+        if len(matches) > 1:
+            matches = matches[matches.nsteps == matches.nsteps.max()].iloc[0]
+            warnings.warn(f"{len(matches)} simulations found. Using the one with max nsteps.")
+        
+        index = matches['index'].item()
+    
+    except FileNotFoundError:
+        raise CustomException("No Simulation Dataframe found.")
+    
+    except ValueError:
+        raise CustomException("No match found.")
+    
+    try:
+        with open(f'{folder}/{index}.pkl', 'rb') as file:
+            
+            print('Loading:', df.loc[index].to_dict(), flush=True)
+            
+            return pickle.load(file)
+    
+    except FileNotFoundError:
+        df = df.drop(index)
+        df.to_csv(f'{folder}/results_df.csv')
+        raise CustomException("Simulation exists but corrupted data. Removed row.")
+
+
+
+
+
+def save_results(results, params, folder):
+    
+    params_df = pd.DataFrame(params, index=[0])
+    
     try:
         df = pd.read_csv(f'{folder}/results_df.csv', index_col=0)
     
     except:
-        df = params_df
+        df = pd.DataFrame(params, index=[0])
         new_index = df.index[0]
     
     else:
@@ -142,7 +216,7 @@ def create_system(params):
             sigmay_mean = cg.sigmaY
         
         case _ :
-            raise Exception("Invalid 'map_type'. Use 'homog, 'custom' or 'cg'.")        
+            raise CustomException("Invalid 'map_type'. Use 'homog, 'custom' or 'cg'.")        
     
     print('Initializing system...', flush=True)
     system = SystemAthermal(
@@ -192,27 +266,52 @@ def init_sigma(system, sigma_std=0.1, seed=0, relax=True):
 
 
 #TODO: very slow, try optimizing
-def extract(params_list, func, ignore=[], folder='./data', exact_nsteps=False):
-    
-    #Ignoring certain keys
-    for element in ignore:
-        for params in params_list:
-            try:
-                del params[element]
-            except:
-                pass
+def extract(params_list, func, folder='./data'):
 
     df = pd.DataFrame(columns=params_list[0])
     
     for params in tqdm(params_list):
-        _, params_df = format_params(params)
+        params, nsteps_mode = format_params(params)
         
-        results = load_results(params_df, folder, exact_nsteps)
+        results = load_results(params, folder, nsteps_mode)
+        params['nsteps'] = results._nsteps #make sure we're using the actual number of steps
         
-        #TODO: update also the nsteps if it was not exact
         new_values_dict = func(results)
-        new_row = params_df.assign(**new_values_dict)
+        new_row = pd.DataFrame(params, index=[0]).assign(**new_values_dict)
         
         df = df.merge(new_row, how='outer')
     
     return df
+
+def find_matches(df, params_df, nsteps_mode, ignore=[]):
+    
+    #Ignoring certain keys
+    for element in ignore:
+        try:
+            params_df = params_df.drop('element')
+        except:
+            warnings.warn(f"Could not ignore {element}, parameter doesn't exist.")
+    
+    match nsteps_mode:
+        
+        case 'fixed':
+            pass #don't do anything
+            
+        case 'min':
+            min_nsteps = params_df['nsteps'].iloc[0] #define the minimum number of steps necessary
+            df = df.query(f"nsteps >= {min_nsteps}") #drop everything that has less total steps
+            params_df = params_df.drop(columns='nsteps') #nsteps not relevant anymore to look for matches
+            
+        case 'min_flow':
+            min_flow_samples = params_df['nsteps'].iloc[0] #define the minimum number of flow samples
+            df = df.query(f"flow_samples >= {min_flow_samples}") #drop everything that has less flow samples
+            params_df = params_df.drop(columns='nsteps') #nsteps not relevant anymore to look for matches
+
+        case _:
+            raise CustomException('Invalid nsteps mode.')
+        
+    return df.reset_index().merge(params_df) #trick to look for a match
+
+
+class CustomException(Exception):
+    pass
