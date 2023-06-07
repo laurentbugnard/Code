@@ -2,6 +2,8 @@ import h5py
 import numpy as np
 import pandas as pd
 
+#TODO: look what to do with all of this
+
 def to_dict(param_str:str) -> dict:
     """This function transforms a string of parameter of the form
     'a=1_b=2.3_c=text' into a dictionary, i.e. {'a':1, 'b':2.3, 'c':'text'},
