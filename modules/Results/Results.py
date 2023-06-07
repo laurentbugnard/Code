@@ -118,8 +118,8 @@ class Results(object):
             
     def process_statistics(self, n_bins=30, cut_at=1):
         
-        idx_linear = self.idx_linear
-        delta_sigmabar = np.diff(self.sigmabar)[idx_linear]
+        idx_flow = self.idx_flow
+        delta_sigmabar = np.diff(self.sigmabar[idx_flow])
         unloadings = -1 * delta_sigmabar[delta_sigmabar<0]
 
         bin_edges = np.logspace(np.log10(np.min(unloadings)),np.log10(np.max(unloadings)), n_bins)
