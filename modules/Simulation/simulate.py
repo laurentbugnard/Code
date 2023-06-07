@@ -17,7 +17,7 @@ from Results.Results import Results
 from CorrGen.CorrGen import CorrGen
 
 
-def simulate(params, save=True, folder='./data', force_redo=False, full_processing=False, exact_nsteps=False):
+def simulate(params, save=True, folder='./data', force_redo=False, full_processing=False):
     # In docstring: specify that nsteps is the number of shift+relax and that all outputs
     # will have length 2*nsteps + 1 (initial state)
     #TODO: by default, make it not return anything (a bit faster, no loading etc.)
@@ -236,11 +236,12 @@ def image_to_map(image, params):
     
     #try to shift using parameters "low" and "high"
     try:
-        assert np.nanmin(image) == 0 , "Image must have min = 0."
-        assert np.nanmax(image) == 1 , "Image must have max = 1."
+        if not np.nanmin(image) == 0: warnings.warn("Image must have min = 0.")
+        if not np.nanmax(image) == 1: warnings.warn("Image must have max = 1.")
         sigmay_mean = (params['high'] - params['low']) * image + params['low']
     
-    except:
+    except Exception as e:
+        print(e, flush=True)
         #try to shift using "shift" and "scale"
         try:
             sigmay_mean = params['shift'] + params['scale']*image
@@ -273,13 +274,19 @@ def extract(params_list, func, folder='./data'):
     for params in tqdm(params_list):
         params, nsteps_mode = format_params(params)
         
-        results = load_results(params, folder, nsteps_mode)
-        params['nsteps'] = results._nsteps #make sure we're using the actual number of steps
+        try:
+            results = load_results(params, folder, nsteps_mode)
         
-        new_values_dict = func(results)
-        new_row = pd.DataFrame(params, index=[0]).assign(**new_values_dict)
+            params['nsteps'] = results._nsteps #make sure we're using the actual number of steps
+            
+            new_values_dict = func(results)
+            new_row = pd.DataFrame(params, index=[0]).assign(**new_values_dict)
+            
+            df = df.merge(new_row, how='outer')
+
+        except CustomException as e:
+            print("Couldn't load. Reason: ", e, flush=True)
         
-        df = df.merge(new_row, how='outer')
     
     return df
 
